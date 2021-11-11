@@ -1,0 +1,43 @@
+name: PHPUnit Tests via Composer
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ ubuntu-20.04 ]
+        php: [ '7.3', '7.4', '8.0' ]
+    name: Build and test on ${{ matrix.php }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Force PHP ${{ matrix.php }}
+        uses: nanasess/setup-php@master
+        with:
+          php-version: ${{ matrix.php }}
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+      - name: Require php-cs-fixer
+        run: |
+          mkdir --parents ./tools/php-cs-fixer
+          composer require --working-dir=tools/php-cs-fixer friendsofphp/php-cs-fixer "friendsofphp/php-cs-fixer:3.0.0" --prefer-dist --no-progress
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Unit tests
+        run: |
+          mkdir --parents ./src ./tests
+          ./vendor/bin/phpunit --no-coverage --colors=never
+      - name: Psalm
+        run: |
+          ./vendor/bin/psalm --monochrome --no-progress --stats --show-info=false
+      - name: phpstan
+        run: |
+          ./vendor/bin/phpstan --no-interaction --no-ansi analyse
+      - name: Mess Detector
+        run: |
+          ./vendor/bin/phpmd src,tests text naming codesize design
+      - name: php-cs-fixer
+        run: |
+          ./tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
