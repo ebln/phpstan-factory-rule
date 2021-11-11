@@ -11,12 +11,12 @@
     ],
     "require": {
         "php": "7.2 - 8.2",
-        "ebln/phpstan-factory-mark": "^0.0.1"
+        "ebln/phpstan-factory-mark": "^0.0.2",
+        "phpstan/phpstan": "^0.12 || ^1"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.15",
         "phpmd/phpmd": "^2.10",
-        "phpstan/phpstan": "^0.12",
         "phpunit/phpunit": "^9.5",
         "roave/security-advisories": "dev-latest",
         "vimeo/psalm": "^4.12"
@@ -24,9 +24,21 @@
     "config": {
         "sort-packages": true
     },
+    "extra": {
+        "phpstan": {
+            "includes": [
+                "rules.neon"
+            ]
+        }
+    },
     "autoload": {
         "psr-4": {
             "Ebln\\PHPStan\\EnforceFactory\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\Ebln\\PHPStan\\EnforceFactory\\": "tests/"
         }
     },
     "scripts": {
@@ -37,7 +49,8 @@
             "psalm --find-unused-psalm-suppress",
             "phpstan analyse",
             "@style-check",
-            "phpmd src,tests ansi cleancode,codesize,controversial,design,naming,unusedcode # cleancode,design"
+            "phpmd src ansi codesize,controversial,design,naming,unusedcode,design",
+            "phpmd tests ansi codesize,controversial,design"
         ],
         "style-check": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run",
         "style-fix": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no",

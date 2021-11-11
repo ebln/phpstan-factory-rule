@@ -1,7 +1,9 @@
+DEFAULT_CONTAINER=php
 DOCKER_COMPOSE_DIR=./.provision
 DOCKER_COMPOSE_YML=$(DOCKER_COMPOSE_DIR)/docker-compose.yml
-DEFAULT_CONTAINER=php
-DOCKER_COMPOSE=docker-compose -f $(DOCKER_COMPOSE_YML)
+MKFILE_PATH=$(abspath $(lastword $(MAKEFILE_LIST)))
+CURRENT_DIR=$(notdir $(patsubst %/,%,$(dir $(MKFILE_PATH))))
+DOCKER_COMPOSE=COMPOSE_PROJECT_NAME=$(CURRENT_DIR) docker-compose -f $(DOCKER_COMPOSE_YML)
 MAKE=make -s
 .DEFAULT_GOAL := help
 
@@ -23,16 +25,16 @@ stop:##Alias of «rm»
 	$(MAKE) rm
 
 enter:##Log into the main container
-	$(DOCKER_COMPOSE) run ${DEFAULT_CONTAINER} /bin/bash
+	$(DOCKER_COMPOSE) run --rm ${DEFAULT_CONTAINER} /bin/bash
 
 test:##Run unit tests
-	$(DOCKER_COMPOSE) run ${DEFAULT_CONTAINER} composer test-unit
+	$(DOCKER_COMPOSE) run --rm ${DEFAULT_CONTAINER} composer test-unit
 
 quality:##Run the complete code quality suite
-	$(DOCKER_COMPOSE) run ${DEFAULT_CONTAINER} composer quality
+	$(DOCKER_COMPOSE) run --rm ${DEFAULT_CONTAINER} composer quality
 
 style-fix:##Apply code style
-	$(DOCKER_COMPOSE) run ${DEFAULT_CONTAINER} composer style-fix
+	$(DOCKER_COMPOSE) run --rm ${DEFAULT_CONTAINER} composer style-fix
 
 coverage:##Generate coverage report
-	$(DOCKER_COMPOSE) run ${DEFAULT_CONTAINER} composer coverage
+	$(DOCKER_COMPOSE) run --rm ${DEFAULT_CONTAINER} composer coverage

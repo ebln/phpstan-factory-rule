@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bfd10c00916872441ecb725ad744b6f1",
+    "content-hash": "e0483a59ea58621bd30dde68410b5b43",
     "packages": [
         {
             "name": "ebln/phpstan-factory-mark",
-            "version": "v0.0.1",
+            "version": "v0.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ebln/phpstan-factory-mark.git",
-                "reference": "c3c26a7e300f983d0aacc05fa9232edb30c991a9"
+                "reference": "bd56d169b5ba76383b0a418aeca1c27d099098b7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ebln/phpstan-factory-mark/zipball/c3c26a7e300f983d0aacc05fa9232edb30c991a9",
-                "reference": "c3c26a7e300f983d0aacc05fa9232edb30c991a9",
+                "url": "https://api.github.com/repos/ebln/phpstan-factory-mark/zipball/bd56d169b5ba76383b0a418aeca1c27d099098b7",
+                "reference": "bd56d169b5ba76383b0a418aeca1c27d099098b7",
                 "shasum": ""
             },
             "require": {
@@ -46,9 +46,9 @@
             "description": "Userland marking interface for ebln/phpstan-factory-rule",
             "support": {
                 "issues": "https://github.com/ebln/phpstan-factory-mark/issues",
-                "source": "https://github.com/ebln/phpstan-factory-mark/tree/v0.0.1"
+                "source": "https://github.com/ebln/phpstan-factory-mark/tree/v0.0.2"
             },
-            "time": "2021-11-10T21:06:14+00:00"
+            "time": "2021-11-12T11:43:27+00:00"
         }
     ],
     "packages-dev": [

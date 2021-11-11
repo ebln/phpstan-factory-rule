@@ -1,0 +1,2 @@
+rules:
+    - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule
