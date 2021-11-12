@@ -51,17 +51,6 @@ class RogueFactory
         $new = new $class();
     }
 
-    public function variableUnpredictable(bool $toggle): void
-    {
-        if ($toggle) {
-            $class = '\Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct';
-        } else {
-            $class = 'Hello world-' . random_int(10, 99);
-        }
-
-        $new = new $class();
-    }
-
     public function anonymousExtending(): void
     {
         $x = new class() extends ForcedFactoryProduct

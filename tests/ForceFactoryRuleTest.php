@@ -15,6 +15,12 @@ class ForceFactoryRuleTest extends RuleTestCase
 {
     private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!';
 
+    // Sadly this remains a vector, as phpstan fails to infer the created class name
+    public function testLoopholeFactory(): void
+    {
+        $this->analyse([__DIR__ . '/data/LoopholeFactory.php'], []);
+    }
+
     public function testEmptyAllowedClasses(): void
     {
         $this->analyse([__DIR__ . '/data/EmptyFactory.php'], [
@@ -34,9 +40,8 @@ class ForceFactoryRuleTest extends RuleTestCase
             [self::ERROR_MESSAGE, 40],
             [self::ERROR_MESSAGE, 40],
             [self::ERROR_MESSAGE, 51],
-            //['variableUnpredictable should fail!?', 62],
-            [self::ERROR_MESSAGE, 67],
-            ['Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!', 80],
+            [self::ERROR_MESSAGE, 56],
+            ['Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!', 69],
         ]);
     }
 
