@@ -1,5 +1,14 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
     level: max
     paths:
         - src
         - tests
+    excludePaths:
+        analyseAndScan:
+            - tests/data/*
+
+rules:
+    - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule

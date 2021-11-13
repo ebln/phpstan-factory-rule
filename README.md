@@ -1,3 +1,13 @@
+Attribute Support Spike
+=======================
+
+ * PHPStan inspection of the very Rule crashes
+   * similar as https://github.com/phpstan/phpstan/issues/5954
+ * `\Ebln\PHPStan\EnforceFactory\ForceFactory` needs to be outsourced to `ebln/phpstan-factory-mark ^2`
+ * `vendor/bin/phpunit` works!
+
+----
+
 ebln/phpstan-factory-rule
 =========================
 

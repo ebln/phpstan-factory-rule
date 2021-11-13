@@ -6,6 +6,7 @@ namespace Ebln\PHPStan\EnforceFactory;
 
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
@@ -14,6 +15,13 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 class ForceFactoryRule implements Rule
 {
+    private ReflectionProvider $reflectionProvider;
+
+    public function __construct(ReflectionProvider $reflectionProvider)
+    {
+        $this->reflectionProvider = $reflectionProvider;
+    }
+
     public function getNodeType(): string
     {
         return \PhpParser\Node\Expr\New_::class;
@@ -26,17 +34,18 @@ class ForceFactoryRule implements Rule
             if (!$isName) {
                 continue; // newly instantiated class name couldn't be infered
             }
+            /** @var class-string $class → sadly Psalm cannot be convinced to return class-string for getClassNames in reasonable amount of time */
             $allowedFactories = $this->getAllowedFactories($class);
             if (null === $allowedFactories) {
                 continue; // newly instantiated class dowsn't implement ForceFactory interface
             }
 
-            if (empty($allowedFactories)) {
+            if ([] === $allowedFactories) {
                 $errors[] = RuleErrorBuilder::message(
-                    ltrim($class, '\\') . ' cannot be instantiated by other classes; see ' . ForceFactoryInterface::class
+                    ltrim($class, '\\') . ' has either no factories defined or a conflict between interface and attribute!'
                 )->build();
 
-                continue;
+                continue; // bogus configuration
             }
             /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
             if (
@@ -56,16 +65,61 @@ class ForceFactoryRule implements Rule
     }
 
     /**
+     * @phpstan-param class-string $className
+     *
      * @return null|string[] List of FQCNs
      * @phpstan-return null|class-string[]
      */
     private function getAllowedFactories(string $className): ?array
     {
-        if (!is_a($className, ForceFactoryInterface::class, true)) {
+        $allowedFactories = $this->getFactoriesFromAttribute($className);
+
+        if (is_a($className, ForceFactoryInterface::class, true)) {
+            /* phpstan-var class-string<ForceFactoryInterface> $className */
+            $interfaceFactories = $className::getFactories();
+            sort($interfaceFactories);
+            if (null === $allowedFactories) {
+                $allowedFactories = $interfaceFactories;
+            } elseif ($allowedFactories !== $interfaceFactories) {
+                $allowedFactories = []; // Will result in a bogus definition error
+            }
+        }
+
+        return $allowedFactories;
+    }
+
+    /**
+     * @phpstan-param class-string $className
+     *
+     * @return array<class-string>
+     */
+    private function getFactoriesFromAttribute(string $className): ?array
+    {
+        if (\PHP_VERSION_ID < 80000 && $this->reflectionProvider->hasClass($className)) {
             return null;
         }
 
-        return $className::getFactories();
+        /**
+         * FIXME!
+         * https://github.com/phpstan/phpstan/discussions/5863
+         * https://github.com/phpstan/phpstan/issues/5954
+         */
+
+        /** @var \ReflectionClass $reflection */
+        $reflection = $this->reflectionProvider->getClass($className)->getNativeReflection();
+        /** @var \ReflectionAttribute $attribute */
+        foreach ($reflection->getAttributes() as $attribute) {
+            if (ForceFactory::class === $attribute->getName()) {
+                /** @var ForceFactory $forceFactory */
+                $forceFactory     = $attribute->newInstance();
+                $allowedFactories = $forceFactory->getAllowedFactories();
+                sort($allowedFactories);
+
+                return $allowedFactories;
+            }
+        }
+
+        return null;
     }
 
     /**
