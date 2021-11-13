@@ -42,6 +42,7 @@ class ForceFactoryRuleTest extends RuleTestCase
             [self::ERROR_MESSAGE, 51],
             [self::ERROR_MESSAGE, 56],
             ['Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!', 69],
+            [self::ERROR_MESSAGE, 95],
         ]);
     }
 

@@ -101,4 +101,9 @@ class ForcedFactory
 
         $bar = $x->foo();
     }
+
+    public static function staticClass(): ForcedFactoryProduct
+    {
+        return new ForcedFactoryProduct();
+    }
 }
