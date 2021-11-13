@@ -95,7 +95,7 @@ class ForceFactoryRule implements Rule
      */
     private function getFactoriesFromAttribute(string $className): ?array
     {
-        if (\PHP_VERSION_ID < 80000 && $this->reflectionProvider->hasClass($className)) {
+        if (\PHP_VERSION_ID < 80000 || !$this->reflectionProvider->hasClass($className)) {
             return null;
         }
 
@@ -105,10 +105,8 @@ class ForceFactoryRule implements Rule
          * https://github.com/phpstan/phpstan/issues/5954
          */
 
-        /** @var \ReflectionClass $reflection */
-        $reflection = $this->reflectionProvider->getClass($className)->getNativeReflection();
         /** @var \ReflectionAttribute $attribute */
-        foreach ($reflection->getAttributes() as $attribute) {
+        foreach ($this->reflectionProvider->getClass($className)->getNativeReflection()->getAttributes() as $attribute) {
             if (ForceFactory::class === $attribute->getName()) {
                 /** @var ForceFactory $forceFactory */
                 $forceFactory     = $attribute->newInstance();
