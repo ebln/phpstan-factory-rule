@@ -5,9 +5,16 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
-## Upcoming
+## [Unreleased]
 
+### Added
 - Support for attributes
+    * missing stand-alone attribute
+    * phpstan fails when checking the very rule
+
+### Removed
+* Support for PHP < 7.4
+* Support for PHPStan < 1
 
 ----
 
