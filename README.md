@@ -5,9 +5,40 @@ Enforce that your classes get only instantiated by the factories you define!
 
 ## Usage
 
-* Implement the interface
-* Define allowed factories
-* rely on PHPStan
+Install this package and the marking package alongside with PHPStan.
+
+Implement `\Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` with the DTO you want to protect.
+```php
+<?php
+// […]
+use Ebln\PHPStan\EnforceFactory\ForceFactoryInterface;
+
+class OnlyViaFactory implements ForceFactoryInterface
+{
+    // […]
+    public static function getFactories(): array
+    {   // Return a list of classes that are allowed to
+        //   create new OnlyViaFactory instances…
+        return [TheOnlyTrueFactory::class];
+    }
+}
+```
+Now rely on PHPStan in CI pipelines, git hooks or IDE integrations.
+
+If somebody introduces a rogue factory:
+```php
+<?php
+// […]
+
+class FailingFactory
+{
+    public function create(): OnlyViaFactory
+    {   
+        return new OnlyViaFactory();
+    }
+}
+```
+…that is supposed to fail, when you run PHPStan.
 
 ## Installation
 
