@@ -1,8 +1,8 @@
 {
     "name": "ebln/phpstan-factory-rule",
-    "type": "phpstan-extension",
     "description": "PHPStan rule to enforce instanciation by factories",
     "license": "MIT",
+    "type": "phpstan-extension",
     "authors": [
         {
             "name": "ebln",
@@ -10,9 +10,9 @@
         }
     ],
     "require": {
-        "php": "7.4 - 8.3",
+        "php": "7.4 - 8.4",
         "ebln/phpstan-factory-mark": "^1.1",
-        "phpstan/phpstan": "^0.12 || ^1"
+        "phpstan/phpstan": "^1.11"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.15",
@@ -20,6 +20,16 @@
         "phpunit/phpunit": "^9.5",
         "roave/security-advisories": "dev-latest",
         "vimeo/psalm": "^4.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ebln\\PHPStan\\EnforceFactory\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\Ebln\\PHPStan\\EnforceFactory\\": "tests/"
+        }
     },
     "config": {
         "allow-plugins": {
@@ -32,16 +42,6 @@
             "includes": [
                 "rules.neon"
             ]
-        }
-    },
-    "autoload": {
-        "psr-4": {
-            "Ebln\\PHPStan\\EnforceFactory\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Test\\Ebln\\PHPStan\\EnforceFactory\\": "tests/"
         }
     },
     "scripts": {
