@@ -18,8 +18,6 @@ RUN apt-get update \
     && true
 COPY 30-xdebug-config.ini /usr/local/etc/php/conf.d/
 
-USER app
-
 ENV PATH "$PATH:/home/app/.composer/vendor/bin"
 
 RUN composer global require friendsofphp/php-cs-fixer \
