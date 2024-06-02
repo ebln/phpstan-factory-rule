@@ -3,3 +3,11 @@ parameters:
     paths:
         - src
         - tests
+
+    excludePaths:
+        analyseAndScan:
+            - tests/data/*
+            - tests/dataAttrib/*
+
+rules:
+    - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule

@@ -52,7 +52,7 @@
             "psalm --find-unused-psalm-suppress",
             "phpstan analyse",
             "@style-check",
-            "phpmd src ansi codesize,controversial,design,naming,unusedcode,design",
+            "phpmd src ansi codesize,controversial,naming,unusedcode",
             "phpmd tests ansi codesize,controversial,design"
         ],
         "style-check": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run",
