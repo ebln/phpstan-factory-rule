@@ -42,8 +42,11 @@ $rules = [
 $config = new PhpCsFixer\Config();
 $config->setRiskyAllowed(true)
     ->setRules($rules)
-    ->setFinder($finder)
-    ->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect());
+    ->setFinder($finder);
+
+if (class_exists('PhpCsFixer\Runner\Parallel\ParallelConfigFactory')) {
+    $config->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect());
+}
 
 if (false) {
     $resolver = new \PhpCsFixer\Console\ConfigurationResolver($config, [], '', new \PhpCsFixer\ToolInfo());
