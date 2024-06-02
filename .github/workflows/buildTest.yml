@@ -12,9 +12,9 @@ jobs:
     name: Build and test on ${{ matrix.php }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Force PHP ${{ matrix.php }}
-        uses: nanasess/setup-php@master
+        uses: nanasess/setup-php@v4
         with:
           php-version: ${{ matrix.php }}
       - name: Validate composer.json and composer.lock
