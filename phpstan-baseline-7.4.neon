@@ -1,0 +1,13 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method ReflectionClass\\:\\:getAttributes\\(\\)\\.$#"
+			path: src/ForceFactoryRule.php
+
+		-
+			message: "#^Method Ebln\\\\PHPStan\\\\EnforceFactory\\\\ForceFactoryRule\\:\\:getFactoriesFromAttributeByClass\\(\\) has parameter \\$reflection with generic class ReflectionClass but does not specify its types\\: T$#"
+			path: src/ForceFactoryRule.php
+
+		-
+			message: "#^PHPDoc tag @param for parameter \\$reflection with type PHPStan\\\\BetterReflection\\\\Reflection\\\\Adapter\\\\ReflectionClass\\|PHPStan\\\\BetterReflection\\\\Reflection\\\\Adapter\\\\ReflectionEnum is not subtype of native type ReflectionClass\\.$#"
+			path: src/ForceFactoryRule.php
