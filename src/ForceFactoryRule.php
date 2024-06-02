@@ -110,10 +110,10 @@ class ForceFactoryRule implements Rule
         return \array_merge(
             \array_map(static function (\PHPStan\Type\Constant\ConstantStringType $type): array {
                 return [$type->getValue(), \true];
-            }, \PHPStan\Type\TypeUtils::getConstantStrings($type)),
+            }, $type->getConstantStrings()),
             \array_map(static function (string $name): array {
                 return [$name, \false];
-            }, \PHPStan\Type\TypeUtils::getDirectClassNames($type))
+            }, $type->getObjectClassNames())
         );
     }
 }
