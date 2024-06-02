@@ -22,6 +22,9 @@
         "vimeo/psalm": "^4.12"
     },
     "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true
+        },
         "sort-packages": true
     },
     "extra": {

@@ -1,12 +1,11 @@
-version: '3.6'
 services:
     php:
         build:
             context: .
-        image: php7.4-cli/phpstan-factory-rule
+        image: php8.0-cli/phpstan-factory-rule
         volumes:
             - ./..:/var/www
         extra_hosts:
             - "host.docker.internal:${XDEBUG_REMOTE_HOST:-127.0.0.1}"
         environment:
-            PHP_IDE_CONFIG: "serverName=php-cli-74.local"
+            PHP_IDE_CONFIG: "serverName=php-cli-80.local"

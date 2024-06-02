@@ -38,6 +38,7 @@ class ForceFactoryRule implements Rule
 
                 continue;
             }
+
             /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
             if (
                 $scope->isInClass()
@@ -57,6 +58,7 @@ class ForceFactoryRule implements Rule
 
     /**
      * @return null|string[] List of FQCNs
+     *
      * @phpstan-return null|class-string[]
      */
     private function getAllowedFactories(string $className): ?array
@@ -76,6 +78,7 @@ class ForceFactoryRule implements Rule
      * @param \PhpParser\Node\Expr\New_ $node $node
      *
      * @return array<int, array{string, bool}>
+     *
      * @psalm-return  array<array{string, bool}>
      *
      * @license https://github.com/phpstan/phpstan/blob/1.1.2/LICENSE
