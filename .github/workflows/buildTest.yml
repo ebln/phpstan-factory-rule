@@ -41,6 +41,7 @@ jobs:
       -   name: Mess Detector Tests
           run: |
             ./vendor/bin/phpmd tests text codesize,controversial,design
+            ./vendor/bin/phpmd src text codesize,controversial,naming,unusedcode
       - name: php-cs-fixer
         run: |
           ./tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
