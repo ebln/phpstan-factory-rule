@@ -11,6 +11,16 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
+## [0.0.2]
+
+### Added
+
+- Supporting PHP upto 8.3
+
+### Removed
+
+- Support for PHP < 7.4
+
 ## [0.0.1]
 
 ### Added

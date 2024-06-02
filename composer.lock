@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "040a59354dd2db87dd22a74ae23e1530",
+    "content-hash": "30b9c265f49fd3660d443b087d2cb98c",
     "packages": [
         {
             "name": "ebln/phpstan-factory-mark",
-            "version": "1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ebln/phpstan-factory-mark.git",
-                "reference": "4e382a2927314596fe95dc3801194cc770406725"
+                "reference": "84ba397cba70d0e012c8fd5ad9dee84a8bb157b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ebln/phpstan-factory-mark/zipball/4e382a2927314596fe95dc3801194cc770406725",
-                "reference": "4e382a2927314596fe95dc3801194cc770406725",
+                "url": "https://api.github.com/repos/ebln/phpstan-factory-mark/zipball/84ba397cba70d0e012c8fd5ad9dee84a8bb157b9",
+                "reference": "84ba397cba70d0e012c8fd5ad9dee84a8bb157b9",
                 "shasum": ""
             },
             "require": {
-                "php": "7.2 - 8.2"
+                "php": "7.4 - 8.4"
             },
             "require-dev": {
                 "ergebnis/composer-normalize": "^2.15",
@@ -46,9 +46,9 @@
             "description": "Userland marking interface for ebln/phpstan-factory-rule",
             "support": {
                 "issues": "https://github.com/ebln/phpstan-factory-mark/issues",
-                "source": "https://github.com/ebln/phpstan-factory-mark/tree/1.0.0"
+                "source": "https://github.com/ebln/phpstan-factory-mark/tree/v1.1.0"
             },
-            "time": "2021-11-12T18:13:10+00:00"
+            "time": "2024-06-02T15:35:11+00:00"
         },
         {
             "name": "phpstan/phpstan",
@@ -932,12 +932,12 @@
             "version": "5.2.11",
             "source": {
                 "type": "git",
-                "url": "https://github.com/justinrainbow/json-schema.git",
+                "url": "https://github.com/jsonrainbow/json-schema.git",
                 "reference": "2ab6744b7296ded80f8cc4f9509abbff393399aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/justinrainbow/json-schema/zipball/2ab6744b7296ded80f8cc4f9509abbff393399aa",
+                "url": "https://api.github.com/repos/jsonrainbow/json-schema/zipball/2ab6744b7296ded80f8cc4f9509abbff393399aa",
                 "reference": "2ab6744b7296ded80f8cc4f9509abbff393399aa",
                 "shasum": ""
             },
@@ -5052,8 +5052,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.3 - 8.2"
+        "php": "7.4 - 8.3"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.6.0"
 }
