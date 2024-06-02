@@ -19,7 +19,7 @@
         "phpmd/phpmd": "^2.10",
         "phpunit/phpunit": "^9.5",
         "roave/security-advisories": "dev-latest",
-        "vimeo/psalm": "^4.12"
+        "vimeo/psalm": "^5.24"
     },
     "autoload": {
         "psr-4": {
