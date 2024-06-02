@@ -38,6 +38,7 @@ class ForceFactoryRule implements Rule
 
                 continue;
             }
+
             /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
             if (
                 $scope->isInClass()

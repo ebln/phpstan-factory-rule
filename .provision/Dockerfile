@@ -1,10 +1,10 @@
-FROM php:7.4-cli
+FROM php:8.0-cli
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update \
     && apt-get install -y git nano zip unzip zlib1g-dev libzip-dev \
-    && pecl install -o xdebug-3.0.4 \
+    && pecl install -o xdebug \
     && docker-php-ext-enable xdebug \
     && apt-get -y autoremove \
     && apt-get clean \
