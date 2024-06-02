@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": "7.4 - 8.2",
+        "php": "7.4 - 8.4",
         "ebln/phpstan-factory-mark": "^1.1",
         "phpstan/phpstan": "^1.11"
     },

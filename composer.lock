@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5ef70f57712a835357cf632ed257106c",
+    "content-hash": "d34c0cd3e1aa9b32f4c362580e4f4dd4",
     "packages": [
         {
             "name": "ebln/phpstan-factory-mark",
@@ -5739,7 +5739,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.4 - 8.2"
+        "php": "7.4 - 8.4"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"

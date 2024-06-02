@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ ubuntu-latest ]
-        php: [ '7.4', '8.0' ]
+        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
     name: Build and test on ${{ matrix.php }}
     steps:
       - name: Checkout repository
@@ -32,9 +32,9 @@ jobs:
       - name: Psalm
         run: |
           ./vendor/bin/psalm --monochrome --no-progress --stats --show-info=false
-      - name: DISABLED phpstan
+      - name: phpstan
         run: |
-          echo ./vendor/bin/phpstan --no-interaction --no-ansi analyse
+          ./vendor/bin/phpstan --no-interaction --no-ansi analyse
       - name: Mess Detector Sources
         run: |
           ./vendor/bin/phpmd src text codesize,controversial,design,naming,unusedcode,design
