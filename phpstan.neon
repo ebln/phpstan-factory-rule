@@ -11,6 +11,7 @@ parameters:
         analyseAndScan:
             - tests/data/*
             - tests/dataAttrib/*
+            - tests/dataMixed/*
 
 rules:
     - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule
