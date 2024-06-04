@@ -22,6 +22,12 @@ class AttribForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php'], []);
     }
 
+    // Sadly this remains a vector, as phpstan fails to infer the created class name
+    public function testLoopholeInvoker(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php', __DIR__ . '/dataAttrib/LoopholeInvoker.php'], []);
+    }
+
     public function testEmptyAllowedClasses(): void
     {
         $this->analyse([__DIR__ . '/dataAttrib/EmptyFactory.php'], [

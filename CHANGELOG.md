@@ -5,11 +5,15 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
+## TODO
+- TODO: remove variableUnpredictable` in favour of  `variableUninferable`
+
 ## Upcoming
 
 ### Added
 - Support for attributes
 	* missing stand-alone attribute ???
+- Extended test case for Loophole (still failing)
 
 ### Removed
 * Support for PHP < 7.4
