@@ -9,7 +9,7 @@ class LoopholeFactory
     public function variableUninferable(bool $toggle): void
     {
         if ($toggle) {
-            $class = '\Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct';
+            $class = '\Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct';
         } else {
             $class = 'Hello world-' . random_int(10, 99);
         }
