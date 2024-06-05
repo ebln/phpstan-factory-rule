@@ -151,8 +151,8 @@ class ForceFactoryRule implements Rule
      *
      * @psalm-return  array<array{string, bool}>
      *
-     * @license https://github.com/phpstan/phpstan/blob/1.1.2/LICENSE
-     * @author  Ondřej Mirtes et al. https://github.com/phpstan/phpstan-src/blob/0.12.x/src/Rules/Classes/InstantiationRule.php#blob_contributors_box
+     * @license https://github.com/phpstan/phpstan-src/blob/1.11.x/LICENSE
+     * @author  Ondřej Mirtes et al. https://github.com/phpstan/phpstan-src/blame/1.11.x/src/Rules/Classes/InstantiationRule.php
      * @author  ebln
      *
      * @see     \PHPStan\Rules\Classes\InstantiationRule::getClassNames
@@ -163,8 +163,8 @@ class ForceFactoryRule implements Rule
             return [[(string)$node->class, \true]];
         }
         if ($node->class instanceof \PhpParser\Node\Stmt\Class_) {
-            $anonymousClassType = $scope->getType($node);
-            if (!$anonymousClassType instanceof \PHPStan\Type\TypeWithClassName) {
+            $classNames = $scope->getType($node)->getObjectClassNames();
+            if ([] === $classNames) {
                 throw new \PHPStan\ShouldNotHappenException();
             }
             // Report back extended class!
@@ -172,8 +172,10 @@ class ForceFactoryRule implements Rule
                 return [[$node->class->extends->toString(), \true]];
             }
 
-            // we don't care about the anonymous class' name and abort processing early
-            return [[$anonymousClassType->getClassName(), \false]];
+            return array_map(
+                static fn (string $className) => [$className, \false],
+                $classNames,
+            );
         }
         $type = $scope->getType($node->class);
 
