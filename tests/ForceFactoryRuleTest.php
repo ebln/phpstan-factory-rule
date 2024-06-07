@@ -25,7 +25,7 @@ class ForceFactoryRuleTest extends RuleTestCase
     {
         $this->analyse([__DIR__ . '/data/EmptyFactory.php'], [
             [
-                'Test\Ebln\PHPStan\EnforceFactory\data\code\EmptyProduct cannot be instantiated by other classes; see Ebln\PHPStan\EnforceFactory\ForceFactoryInterface',
+                'Test\Ebln\PHPStan\EnforceFactory\data\code\EmptyProduct has either no factories defined or a conflict between interface and attribute!',
                 13,
             ],
         ]);
@@ -67,6 +67,6 @@ class ForceFactoryRuleTest extends RuleTestCase
 
     protected function getRule(): Rule
     {
-        return new ForceFactoryRule();
+        return new ForceFactoryRule($this->createReflectionProvider());
     }
 }
