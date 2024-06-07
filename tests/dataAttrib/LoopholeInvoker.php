@@ -20,8 +20,8 @@ class LoopholeInvoker
         return $loophole;
     }
 
-    public function expectedMissingClass()
+    public function expectedMissingClass(): void
     {
-        return $this->loopholeFactory->variableUninferable(false);
+        $this->loopholeFactory->variableUninferable(false);
     }
 }

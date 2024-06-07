@@ -6,7 +6,7 @@ namespace Test\Ebln\PHPStan\EnforceFactory\dataAttrib;
 
 class LoopholeFactory
 {
-    public function variableUninferable(bool $toggle): void
+    public function variableUninferable(bool $toggle): object
     {
         if ($toggle) {
             $class = '\Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct';
@@ -14,6 +14,6 @@ class LoopholeFactory
             $class = 'Hello world-' . random_int(10, 99);
         }
 
-        $new = new $class();
+        return new $class();
     }
 }
