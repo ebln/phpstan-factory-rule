@@ -3,9 +3,44 @@ ebln/phpstan-factory-rule
 
 Enforce that your classes get only instantiated by the factories you define!
 
-## Usage
+## Usage with support for attributes
+Require this package: `composer require --dev ebln/phpstan-factory-rule`
 
-Install this package and the marking package alongside with PHPStan.
+Add the `ForceFactory` attribute to your class, and supply all class names as arguments,
+which shall be allowed to instanciate your object.
+```php
+<?php
+// […]
+
+#[\Ebln\Attrib\ForceFactory(GoodFactory::class, BetterFactory::class)]
+class OnlyViaFactory
+{
+}
+```
+
+Now lean back and rely on PHPStan in CI pipelines, git hooks or IDE integrations;
+If somebody introduces a rogue factory:
+```php
+<?php
+// […]
+
+class FailingFactory
+{
+    public function create(): OnlyViaFactory
+    {   
+        return new OnlyViaFactory();
+    }
+}
+```
+…that is supposed to fail, when you run PHPStan.
+
+## Deprecated usage with `ebln/phpstan-factory-mark`
+
+Require this extention and [the package containing the marking interface](https://github.com/ebln/phpstan-factory-mark) via [Composer](https://getcomposer.org/) alongside with PHPStan:
+```shell
+composer require ebln/phpstan-factory-mark
+composer require --dev ebln/phpstan-factory-rule
+```
 
 Implement `\Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` with the DTO you want to protect.
 ```php
@@ -42,10 +77,10 @@ class FailingFactory
 
 ## Installation
 
-Require this extention and [the package containing the interface](https://github.com/ebln/phpstan-factory-mark) via [Composer](https://getcomposer.org/):
+Require this extention via [Composer](https://getcomposer.org/):
 
-```
-composer require ebln/phpstan-factory-mark && composer require --dev ebln/phpstan-factory-rule
+```php
+composer require --dev ebln/phpstan-factory-rule
 ```
 
 If you also install [phpstan/extension-installer](https://github.com/phpstan/extension-installer) then you're all set!

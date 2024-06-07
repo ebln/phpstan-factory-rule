@@ -5,6 +5,19 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
+## Upcomming
+
+- Remove support for the interface
+- Deprecate (abandon) the interface package
+- create conflict with interface for version 2
+	```json
+	{
+		"conflict": {
+			"ebln/ebln/phpstan-factory-mark": "*"
+		}
+	}
+	```
+
 ----
 
 ## [1.0.0]
