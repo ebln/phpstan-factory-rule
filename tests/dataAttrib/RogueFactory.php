@@ -7,6 +7,7 @@ namespace Test\Ebln\PHPStan\EnforceFactory\dataAttrib;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\FreeProduct;
+use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\IndependentForcedFactoryProduct;
 
 class RogueFactory
 {
@@ -94,4 +95,10 @@ class RogueFactory
     {
         return new ForcedFactoryProduct();
     }
+
+    public function independentClass(): IndependentForcedFactoryProduct
+    {
+        return new IndependentForcedFactoryProduct();
+    }
+
 }

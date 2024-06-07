@@ -40,16 +40,18 @@ class AttribForceFactoryRuleTest extends RuleTestCase
 
     public function testRogueFactory(): void
     {
+        $offset = 1;
         $this->analyse([__DIR__ . '/dataAttrib/RogueFactory.php'], [
-            [self::ERROR_MESSAGE, 15],
-            [self::ERROR_MESSAGE, 22],
-            [self::ERROR_MESSAGE, 29],
-            [self::ERROR_MESSAGE, 40],
-            [self::ERROR_MESSAGE, 40],
-            [self::ERROR_MESSAGE, 51],
-            [self::ERROR_MESSAGE, 56],
-            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!', 69],
-            [self::ERROR_MESSAGE, 95],
+            [self::ERROR_MESSAGE, 15 + $offset],
+            [self::ERROR_MESSAGE, 22 + $offset],
+            [self::ERROR_MESSAGE, 29 + $offset],
+            [self::ERROR_MESSAGE, 40 + $offset],
+            [self::ERROR_MESSAGE, 40 + $offset],
+            [self::ERROR_MESSAGE, 51 + $offset],
+            [self::ERROR_MESSAGE, 56 + $offset],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!', 69 + $offset],
+            [self::ERROR_MESSAGE, 95 + $offset],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\IndependentForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\IndependentFactory!', 100 + $offset],
         ]);
     }
 
@@ -70,6 +72,13 @@ class AttribForceFactoryRuleTest extends RuleTestCase
     public function testAllowedFactory(): void
     {
         $this->analyse([__DIR__ . '/dataAttrib/ForcedFactory.php'], []);
+    }
+
+    public function testIndependentFactory(): void
+    {
+        $offset = 1;
+        $this->analyse([__DIR__ . '/dataAttrib/IndependentFactory.php'], [
+        ]);
     }
 
     protected function getRule(): Rule
