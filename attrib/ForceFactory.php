@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Ebln\PHPStan\EnforceFactory;
+namespace Ebln\Attrib;
 
 /**
  * Marks classes to be instanciated by certain factories

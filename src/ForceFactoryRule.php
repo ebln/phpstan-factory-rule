@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ebln\PHPStan\EnforceFactory;
 
+use Ebln\Attrib\ForceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;

@@ -23,6 +23,7 @@
     },
     "autoload": {
         "psr-4": {
+            "Ebln\\Attrib\\": "attrib/",
             "Ebln\\PHPStan\\EnforceFactory\\": "src/"
         }
     },
