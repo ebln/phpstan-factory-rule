@@ -20,6 +20,11 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
+## [1.0.1]
+
+### Fixed
+- Fix class name resolution for self & static
+
 ## [1.0.0]
 
 ### Added
