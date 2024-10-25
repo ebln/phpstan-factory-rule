@@ -6,5 +6,4 @@ namespace Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code;
 
 class FreeProduct
 {
-
 }
