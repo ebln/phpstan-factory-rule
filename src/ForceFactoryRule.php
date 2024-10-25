@@ -161,7 +161,7 @@ class ForceFactoryRule implements Rule
     private function getClassNames(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
     {
         if ($node->class instanceof \PhpParser\Node\Name) {
-            return [[(string)$node->class, \true]];
+            return [[$scope->resolveName($node->class), \true]];
         }
         if ($node->class instanceof \PhpParser\Node\Stmt\Class_) {
             $classNames = $scope->getType($node)->getObjectClassNames();
