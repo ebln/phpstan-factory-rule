@@ -17,8 +17,16 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 		}
 	}
 	```
+ - consider updating [getClassNames](https://github.com/phpstan/phpstan-src/blob/e6d9f0c3ec251ea6fad604d3f97e02bedb4d7f42/src/Rules/Classes/InstantiationRule.php#L235)
 
 ----
+
+## [2.0.0]
+
+### Addded
+- Support for PHPStan 2
+### Removed
+- Dropped support for PHPStan < 2
 
 ## [1.0.1]
 

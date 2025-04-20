@@ -44,7 +44,9 @@ class ForceFactoryRule implements Rule
             if ([] === $allowedFactories) {
                 $errors[] = RuleErrorBuilder::message(
                     ltrim($class, '\\') . ' has either no factories defined or a conflict between interface and attribute!'
-                )->build();
+                )->identifier('ebln.forceFactory.bogusDefinition')
+                    ->build()
+                ;
 
                 continue; // bogus configuration
             }
@@ -52,7 +54,7 @@ class ForceFactoryRule implements Rule
             /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
             if (
                 $scope->isInClass()
-                && null !== $scope->getClassReflection()
+                && null !== $scope->getClassReflection() /** @phpstan-ignore notIdentical.alwaysTrue */
                 && in_array($scope->getClassReflection()->getName(), $allowedFactories, true)
             ) {
                 continue; // happy case: ForceFactoryInterface got created within an allowed class
@@ -60,7 +62,10 @@ class ForceFactoryRule implements Rule
 
             $errors[] = RuleErrorBuilder::message(
                 ltrim($class, '\\') . ' must be instantiated by ' . implode(' or ', $allowedFactories) . '!'
-            )->build();
+            )->identifier('ebln.forceFactory.outOfFactoryInstanciation')
+                ->tip('Only use ' . implode(' or ', $allowedFactories) . ' to create an instance of ' . ltrim($class, '\\') . '!')
+                ->build()
+            ;
         }
 
         return $errors;
@@ -76,6 +81,7 @@ class ForceFactoryRule implements Rule
     private function getAllowedFactories(string $className): ?array
     {
         $allowedFactories = $this->getFactoriesFromAttribute($className);
+        /** @phpstan-ignore-next-line phpstanApi.runtimeReflection (seems okay for now) */
         if (is_a($className, ForceFactoryInterface::class, true)) {
             /* phpstan-var class-string<ForceFactoryInterface> $className */
             $interfaceFactories = $className::getFactories();
@@ -93,7 +99,7 @@ class ForceFactoryRule implements Rule
     /**
      * @phpstan-param class-string $className
      *
-     * @return array<class-string>
+     * @return null|array<class-string>
      */
     private function getFactoriesFromAttribute(string $className): ?array
     {

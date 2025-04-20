@@ -28,8 +28,8 @@ class MixedForceFactoryRuleTest extends RuleTestCase
     public function testRogueAttributeFactory(): void
     {
         $this->analyse([__DIR__ . '/dataMixed/RogueAttributeFactory.php'], [
-            ['Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\AttributeProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory!', 14],
-            ['Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\MixedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory or Test\Ebln\PHPStan\EnforceFactory\dataMixed\ForcedFactory!', 19],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\AttributeProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\AttributeProduct!", 14],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\MixedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory or Test\Ebln\PHPStan\EnforceFactory\dataMixed\ForcedFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataMixed\AttributeFactory or Test\Ebln\PHPStan\EnforceFactory\dataMixed\ForcedFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataMixed\code\MixedProduct!", 19],
 
         ]);
     }
