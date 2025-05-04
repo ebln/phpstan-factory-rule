@@ -14,7 +14,7 @@ use PHPStan\Testing\RuleTestCase;
  */
 class AttribForceFactoryRuleTest extends RuleTestCase
 {
-    private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!';
+    private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct!";
 
     // Sadly this remains a vector, as phpstan fails to infer the created class name
     public function testLoopholeFactory(): void
@@ -49,9 +49,9 @@ class AttribForceFactoryRuleTest extends RuleTestCase
             [self::ERROR_MESSAGE, 40 + $offset],
             [self::ERROR_MESSAGE, 51 + $offset],
             [self::ERROR_MESSAGE, 56 + $offset],
-            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!', 69 + $offset],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct!", 69 + $offset],
             [self::ERROR_MESSAGE, 95 + $offset],
-            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\IndependentForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\IndependentFactory!', 100 + $offset],
+            ['Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\IndependentForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\IndependentFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\IndependentFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\IndependentForcedFactoryProduct!", 100 + $offset],
         ]);
     }
 

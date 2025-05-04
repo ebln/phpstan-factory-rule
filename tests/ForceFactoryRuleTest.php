@@ -13,7 +13,8 @@ use PHPStan\Testing\RuleTestCase;
  */
 class ForceFactoryRuleTest extends RuleTestCase
 {
-    private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!';
+    private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!'
+    . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct!";
 
     // Sadly this remains a vector, as phpstan fails to infer the created class name
     public function testLoopholeFactory(): void
@@ -41,7 +42,7 @@ class ForceFactoryRuleTest extends RuleTestCase
             [self::ERROR_MESSAGE, 40],
             [self::ERROR_MESSAGE, 51],
             [self::ERROR_MESSAGE, 56],
-            ['Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!', 69],
+            ['Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\data\code\ExtendedProduct!", 69],
             [self::ERROR_MESSAGE, 95],
         ]);
     }
