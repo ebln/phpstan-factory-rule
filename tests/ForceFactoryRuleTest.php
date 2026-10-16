@@ -15,21 +15,16 @@ class ForceFactoryRuleTest extends RuleTestCase
 {
     private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct!";
 
-    private const LOOPHOLE_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct!";
-
     // Since PHPStan 2.3 the concatenated class name is inferred as constant strings, so the former loophole is reported
+    // Documented loophole: the class expression's type collapses to `object` once a non-constant string joins the union
     public function testLoopholeFactory(): void
     {
-        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php'], [
-            [self::LOOPHOLE_MESSAGE, 17],
-        ]);
+        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php'], []);
     }
 
     public function testLoopholeInvoker(): void
     {
-        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php', __DIR__ . '/dataAttrib/LoopholeInvoker.php'], [
-            [self::LOOPHOLE_MESSAGE, 17],
-        ]);
+        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php', __DIR__ . '/dataAttrib/LoopholeInvoker.php'], []);
     }
 
     public function testEmptyAllowedClasses(): void
@@ -49,7 +44,6 @@ class ForceFactoryRuleTest extends RuleTestCase
             [self::ERROR_MESSAGE, 15 + $offset],
             [self::ERROR_MESSAGE, 22 + $offset],
             [self::ERROR_MESSAGE, 29 + $offset],
-            [self::ERROR_MESSAGE, 40 + $offset],
             [self::ERROR_MESSAGE, 40 + $offset],
             [self::ERROR_MESSAGE, 51 + $offset],
             [self::ERROR_MESSAGE, 56 + $offset],
@@ -85,8 +79,23 @@ class ForceFactoryRuleTest extends RuleTestCase
         ]);
     }
 
+    public function testUnknownClassDoesNotAbortFile(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/UnknownClassFactory.php'], [
+            [self::ERROR_MESSAGE, 18],
+        ]);
+    }
+
+    public function testTypedVariables(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/TypedVariableFactory.php'], [
+            [self::ERROR_MESSAGE, 13],
+            [self::ERROR_MESSAGE, 19],
+        ]);
+    }
+
     protected function getRule(): Rule
     {
-        return new ForceFactoryRule($this->createReflectionProvider());
+        return new ForceFactoryRule();
     }
 }

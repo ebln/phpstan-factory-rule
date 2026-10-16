@@ -7,51 +7,39 @@ namespace Ebln\PHPStan\EnforceFactory;
 use Ebln\Attrib\ForceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * @implements \PHPStan\Rules\Rule<Node\Expr\New_>
+ * @implements Rule<Node\Expr\New_>
  */
 class ForceFactoryRule implements Rule
 {
-    private ReflectionProvider $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
-    {
-        $this->reflectionProvider = $reflectionProvider;
-    }
-
     public function getNodeType(): string
     {
-        return \PhpParser\Node\Expr\New_::class;
+        return Node\Expr\New_::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
     {
         $errors = [];
-        foreach ($this->getClassNames($node, $scope) as [$class, $isName]) {
-            if (!$isName) {
-                continue; // newly instantiated class name couldn't be infered
-            }
-            /** @var class-string $class → sadly Psalm cannot be convinced to return class-string for getClassNames in reasonable amount of time */
+        foreach ($this->instantiatedClasses($node, $scope) as $class) {
             $allowedFactories = $this->getFactoriesFromAttribute($class);
             if (null === $allowedFactories) {
                 continue; // newly instantiated class carries no ForceFactory attribute
             }
 
+            $className = $class->getName();
             if ([] === $allowedFactories) {
-                $errors[] = RuleErrorBuilder::message(
-                    ltrim($class, '\\') . ' has no factories defined!'
-                )->identifier('ebln.forceFactory.bogusDefinition')
+                $errors[] = RuleErrorBuilder::message($className . ' has no factories defined!')
+                    ->identifier('ebln.forceFactory.bogusDefinition')
                     ->build()
                 ;
 
                 continue; // bogus configuration
             }
 
-            /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
             if (
                 $scope->isInClass()
                 && null !== $scope->getClassReflection() /** @phpstan-ignore notIdentical.alwaysTrue */
@@ -61,9 +49,9 @@ class ForceFactoryRule implements Rule
             }
 
             $errors[] = RuleErrorBuilder::message(
-                ltrim($class, '\\') . ' must be instantiated by ' . implode(' or ', $allowedFactories) . '!'
+                $className . ' must be instantiated by ' . implode(' or ', $allowedFactories) . '!'
             )->identifier('ebln.forceFactory.outOfFactoryInstanciation')
-                ->tip('Only use ' . implode(' or ', $allowedFactories) . ' to create an instance of ' . ltrim($class, '\\') . '!')
+                ->tip('Only use ' . implode(' or ', $allowedFactories) . ' to create an instance of ' . $className . '!')
                 ->build()
             ;
         }
@@ -72,102 +60,64 @@ class ForceFactoryRule implements Rule
     }
 
     /**
-     * @phpstan-param class-string $className
+     * Every class the expression may instantiate, as PHPStan infers it: a named class,
+     * the parent of an anonymous class, or the object/class-string type of a variable.
+     * Unknown classes are not part of the inferred type and so are silently skipped.
      *
-     * @return null|array<class-string>
+     * @return list<ClassReflection>
      */
-    private function getFactoriesFromAttribute(string $className): ?array
+    private function instantiatedClasses(Node\Expr\New_ $node, Scope $scope): array
     {
-        if (!$this->reflectionProvider->hasClass($className)) {
-            return null; // unknown class: nothing to enforce, and getClass() would abort the file
+        $classes = [];
+        foreach ($scope->getType($node)->getObjectClassReflections() as $reflection) {
+            if ($reflection->isAnonymous()) {
+                // an anonymous class is checked as its parent: the generated name tells the reader nothing
+                $reflection = $reflection->getParentClass();
+                if (null === $reflection) {
+                    continue;
+                }
+            }
+            $classes[$reflection->getName()] = $reflection;
         }
 
-        $reflection = $this->reflectionProvider->getClass($className);
-        /* psalm-suppress UndefinedClass */
+        return array_values($classes);
+    }
+
+    /** @return null|list<class-string> */
+    private function getFactoriesFromAttribute(ClassReflection $class): ?array
+    {
         $allowedFactories = [];
+        $reflection       = $class;
         do {
-            /** @psalm-suppress UndefinedClass */
             $allowedFactories = [...$allowedFactories, ...$this->getFactoriesFromAttributeByClass($reflection->getNativeReflection())];
         } while ($reflection = $reflection->getParentClass());
 
-        if (empty($allowedFactories)) {
+        if ([] === $allowedFactories) {
             return null;
         }
-        $allowedFactories = array_filter($allowedFactories);
+        $allowedFactories = array_values(array_filter($allowedFactories));
         sort($allowedFactories);
 
         return $allowedFactories;
     }
 
     /**
-     * @psalm-suppress UndefinedDocblockClass,MismatchingDocblockParamType
-     *
-     * @psalm-param \PHPStan\BetterReflection\Reflection\Adapter\ReflectionClass|\PHPStan\BetterReflection\Reflection\Adapter\ReflectionEnum $reflection
+     * @param \ReflectionClass<object> $reflection
      *
      * @return array<int, null|class-string>
      */
     private function getFactoriesFromAttributeByClass(\ReflectionClass $reflection): array
     {
-        /** @psalm-suppress UndefinedClass */
         foreach ($reflection->getAttributes() as $attribute) {
             if (ForceFactory::class === $attribute->getName()) {
                 /** @var ForceFactory $forceFactory */
                 $forceFactory     = $attribute->newInstance();
                 $allowedFactories = $forceFactory->factories;
 
-                return empty($allowedFactories) ? [null] : $allowedFactories;
+                return [] === $allowedFactories ? [null] : $allowedFactories;
             }
         }
 
         return [];
-    }
-
-    /**
-     * Determines possible classes for the new instance
-     *
-     * Modified from \PHPStan\Rules\Classes\InstantiationRule::getClassNames
-     *
-     * @param \PhpParser\Node\Expr\New_ $node $node
-     *
-     * @return array<int, array{string, bool}>
-     *
-     * @psalm-return  array<array{string, bool}>
-     *
-     * @license https://github.com/phpstan/phpstan-src/blob/1.11.x/LICENSE
-     * @author  Ondřej Mirtes et al. https://github.com/phpstan/phpstan-src/blame/1.11.x/src/Rules/Classes/InstantiationRule.php
-     * @author  ebln
-     *
-     * @see     \PHPStan\Rules\Classes\InstantiationRule::getClassNames
-     */
-    private function getClassNames(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
-    {
-        if ($node->class instanceof \PhpParser\Node\Name) {
-            return [[$scope->resolveName($node->class), true]];
-        }
-        if ($node->class instanceof \PhpParser\Node\Stmt\Class_) {
-            $classNames = $scope->getType($node)->getObjectClassNames();
-            if ([] === $classNames) {
-                throw new \PHPStan\ShouldNotHappenException();
-            }
-            // Report back extended class!
-            if ($node->class->extends) {
-                return [[$node->class->extends->toString(), true]];
-            }
-
-            return array_map(
-                static fn (string $className) => [$className, false],
-                $classNames,
-            );
-        }
-        $type = $scope->getType($node->class);
-
-        return \array_merge(
-            \array_map(static function (\PHPStan\Type\Constant\ConstantStringType $type): array {
-                return [$type->getValue(), true];
-            }, $type->getConstantStrings()),
-            \array_map(static function (string $name): array {
-                return [$name, false];
-            }, $type->getObjectClassNames())
-        );
     }
 }
