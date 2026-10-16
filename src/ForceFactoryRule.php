@@ -36,14 +36,14 @@ class ForceFactoryRule implements Rule
                 continue; // newly instantiated class name couldn't be infered
             }
             /** @var class-string $class → sadly Psalm cannot be convinced to return class-string for getClassNames in reasonable amount of time */
-            $allowedFactories = $this->getAllowedFactories($class);
+            $allowedFactories = $this->getFactoriesFromAttribute($class);
             if (null === $allowedFactories) {
-                continue; // newly instantiated class doesn't implement ForceFactory interface
+                continue; // newly instantiated class carries no ForceFactory attribute
             }
 
             if ([] === $allowedFactories) {
                 $errors[] = RuleErrorBuilder::message(
-                    ltrim($class, '\\') . ' has either no factories defined or a conflict between interface and attribute!'
+                    ltrim($class, '\\') . ' has no factories defined!'
                 )->identifier('ebln.forceFactory.bogusDefinition')
                     ->build()
                 ;
@@ -57,7 +57,7 @@ class ForceFactoryRule implements Rule
                 && null !== $scope->getClassReflection() /** @phpstan-ignore notIdentical.alwaysTrue */
                 && in_array($scope->getClassReflection()->getName(), $allowedFactories, true)
             ) {
-                continue; // happy case: ForceFactoryInterface got created within an allowed class
+                continue; // happy case: created within an allowed factory class
             }
 
             $errors[] = RuleErrorBuilder::message(
@@ -69,31 +69,6 @@ class ForceFactoryRule implements Rule
         }
 
         return $errors;
-    }
-
-    /**
-     * @phpstan-param class-string $className
-     *
-     * @return null|string[] List of FQCNs
-     *
-     * @phpstan-return null|class-string[]
-     */
-    private function getAllowedFactories(string $className): ?array
-    {
-        $allowedFactories = $this->getFactoriesFromAttribute($className);
-        /** @phpstan-ignore-next-line phpstanApi.runtimeReflection (seems okay for now) */
-        if (is_a($className, ForceFactoryInterface::class, true)) {
-            /* phpstan-var class-string<ForceFactoryInterface> $className */
-            $interfaceFactories = $className::getFactories();
-            sort($interfaceFactories);
-            if (null === $allowedFactories) {
-                $allowedFactories = $interfaceFactories;
-            } elseif ($allowedFactories !== $interfaceFactories) {
-                $allowedFactories = []; // Will result in a bogus definition error
-            }
-        }
-
-        return $allowedFactories;
     }
 
     /**

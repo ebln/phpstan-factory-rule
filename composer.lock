@@ -4,52 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fb2e605ba768d4d56c14f903a19aeabc",
+    "content-hash": "eea11707dbb602dde94451b90a9b010e",
     "packages": [
-        {
-            "name": "ebln/phpstan-factory-mark",
-            "version": "v1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ebln/phpstan-factory-mark.git",
-                "reference": "40cd7ea309010c2a1c7f0f465f3c50ed43a25ed5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ebln/phpstan-factory-mark/zipball/40cd7ea309010c2a1c7f0f465f3c50ed43a25ed5",
-                "reference": "40cd7ea309010c2a1c7f0f465f3c50ed43a25ed5",
-                "shasum": ""
-            },
-            "require": {
-                "php": "7.4 - 8.4"
-            },
-            "require-dev": {
-                "ergebnis/composer-normalize": "^2.47",
-                "phpstan/phpstan": "^1.1 || ^2.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ebln\\PHPStan\\EnforceFactory\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "ebln",
-                    "email": "34722048+ebln@users.noreply.github.com"
-                }
-            ],
-            "description": "Userland marking interface for ebln/phpstan-factory-rule",
-            "support": {
-                "issues": "https://github.com/ebln/phpstan-factory-mark/issues",
-                "source": "https://github.com/ebln/phpstan-factory-mark/tree/v1.2.0"
-            },
-            "time": "2025-05-04T11:21:52+00:00"
-        },
         {
             "name": "phpstan/phpstan",
             "version": "2.3.1",
