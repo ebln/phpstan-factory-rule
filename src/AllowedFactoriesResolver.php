@@ -59,15 +59,25 @@ final class AllowedFactoriesResolver
             return $this->allowedByClass[$key];
         }
 
-        $declared = null;
+        $holder   = $this->attributeHolder($class);
+        $declared = null === $holder ? null : $this->declaredFactories($holder);
+
+        return $this->allowedByClass[$key] = null === $declared ? null : $this->canonicalise($declared);
+    }
+
+    /**
+     * The class whose attribute governs the given class: itself, or its closest marked
+     * ancestor. Null when no class in the chain carries the attribute.
+     */
+    public function attributeHolder(ClassReflection $class): ?ClassReflection
+    {
         for ($current = $class; null !== $current; $current = $current->getParentClass()) {
-            $declared = $this->declaredFactories($current);
-            if (null !== $declared) {
-                break;
+            if (null !== $this->declaredFactories($current)) {
+                return $current;
             }
         }
 
-        return $this->allowedByClass[$key] = null === $declared ? null : $this->canonicalise($declared);
+        return null;
     }
 
     /**

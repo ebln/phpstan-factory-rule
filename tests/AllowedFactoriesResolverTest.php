@@ -8,14 +8,14 @@ use Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Testing\PHPStanTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\A;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\B;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\C;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\D;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\M;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\P;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\Real;
-use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\resolver\U;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\A;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\B;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\C;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\D;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\M;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\P;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\Real;
+use Test\Ebln\PHPStan\EnforceFactory\Fixtures\Resolver\U;
 
 #[CoversClass(AllowedFactoriesResolver::class)]
 final class AllowedFactoriesResolverTest extends PHPStanTestCase
@@ -29,6 +29,16 @@ final class AllowedFactoriesResolverTest extends PHPStanTestCase
         self::assertSame([A::class], $resolver->allowedFactories($this->class(P::class)));
     }
 
+    public function testAttributeHolderIsTheNearestMarkedClass(): void
+    {
+        $resolver = $this->resolver();
+
+        self::assertSame(C::class, $resolver->attributeHolder($this->class(D::class))?->getName());
+        self::assertSame(C::class, $resolver->attributeHolder($this->class(C::class))?->getName());
+        self::assertSame(P::class, $resolver->attributeHolder($this->class(P::class))?->getName());
+        self::assertNull($resolver->attributeHolder($this->class(U::class)));
+    }
+
     public function testUnmarkedChainIsNull(): void
     {
         $resolver = $this->resolver();
@@ -40,7 +50,7 @@ final class AllowedFactoriesResolverTest extends PHPStanTestCase
     public function testDeclaredKeepsWhatWasWritten(): void
     {
         self::assertSame(
-            ['\TEST\ebln\phpstan\enforcefactory\dataattrib\resolver\real', 'Nope\Missing', Real::class],
+            ['\TEST\ebln\phpstan\enforcefactory\fixtures\resolver\real', 'Nope\Missing', Real::class],
             $this->resolver()->declaredFactories($this->class(M::class)),
         );
     }

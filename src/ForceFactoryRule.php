@@ -27,34 +27,39 @@ class ForceFactoryRule implements Rule
         $errors = [];
         foreach ($this->instantiatedClasses($node, $scope) as $class) {
             $allowedFactories = $this->resolver->allowedFactories($class);
-            if (null === $allowedFactories) {
-                continue; // newly instantiated class carries no ForceFactory attribute
+            if (null === $allowedFactories || [] === $allowedFactories) {
+                continue; // no attribute in the chain, or an empty list: the definition rule reports the latter
             }
 
-            $className = $class->getName();
-            if ([] === $allowedFactories) {
-                $errors[] = RuleErrorBuilder::message($className . ' has no factories defined!')
-                    ->identifier('ebln.forceFactory.bogusDefinition')
-                    ->build()
-                ;
-
-                continue; // bogus configuration
-            }
-
-            $currentClass = $scope->getClassReflection()?->getName();
-            if (null !== $currentClass && in_array($currentClass, $allowedFactories, true)) {
+            $currentClass = $scope->getClassReflection();
+            if (null !== $currentClass && in_array($currentClass->getName(), $allowedFactories, true)) {
                 continue; // happy case: created within an allowed factory class
             }
 
             $errors[] = RuleErrorBuilder::message(
-                $className . ' must be instantiated by ' . implode(' or ', $allowedFactories) . '!'
-            )->identifier('ebln.forceFactory.outOfFactoryInstanciation')
-                ->tip('Only use ' . implode(' or ', $allowedFactories) . ' to create an instance of ' . $className . '!')
+                sprintf('%s must be instantiated by %s.', $class->getName(), implode(' or ', $allowedFactories))
+            )
+                ->identifier('ebln.forceFactory.outsideFactory')
+                ->tip($this->tip($class, $allowedFactories, $currentClass))
                 ->build()
             ;
         }
 
         return $errors;
+    }
+
+    /** @param list<class-string> $allowedFactories */
+    private function tip(ClassReflection $product, array $allowedFactories, ?ClassReflection $currentClass): string
+    {
+        $tip = 'Move this instantiation into ' . implode(' or ', $allowedFactories);
+        if (null === $currentClass || $currentClass->isAnonymous()) {
+            return $tip . '.'; // nothing nameable to add to the attribute
+        }
+
+        // name the class that carries the attribute: an attribute added to a subclass would replace the inherited list
+        $holder = $this->resolver->attributeHolder($product) ?? $product;
+
+        return sprintf('%s, or add %s to the #[ForceFactory] attribute of %s.', $tip, $currentClass->getName(), $holder->getName());
     }
 
     /**
