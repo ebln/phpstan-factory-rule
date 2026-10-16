@@ -113,7 +113,7 @@ class ForceFactoryRule implements Rule
             if (ForceFactory::class === $attribute->getName()) {
                 /** @var ForceFactory $forceFactory */
                 $forceFactory     = $attribute->newInstance();
-                $allowedFactories = $forceFactory->getAllowedFactories();
+                $allowedFactories = $forceFactory->factories;
 
                 return empty($allowedFactories) ? [null] : $allowedFactories;
             }

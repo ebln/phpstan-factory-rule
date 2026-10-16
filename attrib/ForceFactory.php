@@ -5,32 +5,20 @@ declare(strict_types=1);
 namespace Ebln\Attrib;
 
 /**
- * Marks classes to be instanciated by certain factories
+ * Marks a class as instantiable only by the listed factory classes.
  *
- * If used together with ForceFactoryInterface
- *   the configured factories must be congruent!
- *   This is enforced for PHP 8 and later.
+ * Enforced by the PHPStan rule in ebln/phpstan-factory-rule; the attribute itself
+ * is never instantiated during analysis, so it carries no validation.
  */
 #[\Attribute(\Attribute::TARGET_CLASS)]
-class ForceFactory
+final readonly class ForceFactory
 {
-    /** @var array<int, class-string> */
-    private array $allowedFactories;
+    /** @var list<class-string> */
+    public array $factories;
 
     /** @param class-string ...$factories */
     public function __construct(string ...$factories)
     {
-        $allowedFactories = [];
-        foreach ($factories as $factory) {
-            $allowedFactories[$factory] = $factory;
-        }
-
-        $this->allowedFactories = array_values($allowedFactories);
-    }
-
-    /** @return array<int, class-string> */
-    public function getAllowedFactories(): array
-    {
-        return $this->allowedFactories;
+        $this->factories = array_values(array_unique($factories));
     }
 }
