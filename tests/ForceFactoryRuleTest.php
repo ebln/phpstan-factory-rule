@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Test\Ebln\PHPStan\EnforceFactory;
 
-use Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver;
 use Ebln\PHPStan\EnforceFactory\ForceFactoryRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
@@ -165,9 +164,14 @@ final class ForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/DefaultAndAttributeArgs.php'], []);
     }
 
+    public static function getAdditionalConfigFiles(): array
+    {
+        return [__DIR__ . '/../rules.neon'];
+    }
+
     protected function getRule(): Rule
     {
-        return new ForceFactoryRule(new AllowedFactoriesResolver(self::createReflectionProvider()));
+        return self::getContainer()->getByType(ForceFactoryRule::class);
     }
 
     /**

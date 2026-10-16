@@ -28,8 +28,8 @@ final class AllowedFactoriesResolver
     public function declaredFactories(ClassReflection $class): ?array
     {
         foreach ($class->getAttributes() as $attribute) {
-            if (ForceFactory::class !== $attribute->getName()) {
-                continue;
+            if (0 !== strcasecmp(ForceFactory::class, $attribute->getName())) {
+                continue; // PHP resolves class names case-insensitively; without arguments PHPStan keeps the written case
             }
             $factories = $attribute->getArgumentTypes()['factories'] ?? null;
             if (null === $factories) {
