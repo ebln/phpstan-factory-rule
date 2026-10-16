@@ -103,8 +103,8 @@ class ForceFactoryRule implements Rule
      */
     private function getFactoriesFromAttribute(string $className): ?array
     {
-        if (\PHP_VERSION_ID < 80000 && $this->reflectionProvider->hasClass($className)) {
-            return null;
+        if (!$this->reflectionProvider->hasClass($className)) {
+            return null; // unknown class: nothing to enforce, and getClass() would abort the file
         }
 
         $reflection = $this->reflectionProvider->getClass($className);
@@ -167,7 +167,7 @@ class ForceFactoryRule implements Rule
     private function getClassNames(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
     {
         if ($node->class instanceof \PhpParser\Node\Name) {
-            return [[$scope->resolveName($node->class), \true]];
+            return [[$scope->resolveName($node->class), true]];
         }
         if ($node->class instanceof \PhpParser\Node\Stmt\Class_) {
             $classNames = $scope->getType($node)->getObjectClassNames();
@@ -176,11 +176,11 @@ class ForceFactoryRule implements Rule
             }
             // Report back extended class!
             if ($node->class->extends) {
-                return [[$node->class->extends->toString(), \true]];
+                return [[$node->class->extends->toString(), true]];
             }
 
             return array_map(
-                static fn (string $className) => [$className, \false],
+                static fn (string $className) => [$className, false],
                 $classNames,
             );
         }
@@ -188,10 +188,10 @@ class ForceFactoryRule implements Rule
 
         return \array_merge(
             \array_map(static function (\PHPStan\Type\Constant\ConstantStringType $type): array {
-                return [$type->getValue(), \true];
+                return [$type->getValue(), true];
             }, $type->getConstantStrings()),
             \array_map(static function (string $name): array {
-                return [$name, \false];
+                return [$name, false];
             }, $type->getObjectClassNames())
         );
     }

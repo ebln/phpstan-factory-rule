@@ -16,10 +16,12 @@ class ForceFactoryRuleTest extends RuleTestCase
     private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory!'
     . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\data\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\data\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\data\code\ForcedFactoryProduct!";
 
-    // Sadly this remains a vector, as phpstan fails to infer the created class name
+    // Since PHPStan 2.3 the concatenated class name is inferred as constant strings, so the former loophole is reported
     public function testLoopholeFactory(): void
     {
-        $this->analyse([__DIR__ . '/data/LoopholeFactory.php'], []);
+        $this->analyse([__DIR__ . '/data/LoopholeFactory.php'], [
+            [self::ERROR_MESSAGE, 17],
+        ]);
     }
 
     public function testEmptyAllowedClasses(): void

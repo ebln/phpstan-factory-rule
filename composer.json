@@ -10,16 +10,16 @@
         }
     ],
     "require": {
-        "php": "7.4 - 8.4",
+        "php": "^8.2",
         "ebln/phpstan-factory-mark": "^1.1",
-        "phpstan/phpstan": "^2.0"
+        "phpstan/phpstan": "^2.2"
     },
     "require-dev": {
-        "ergebnis/composer-normalize": "^2.15",
-        "phpmd/phpmd": "^2.10",
-        "phpunit/phpunit": "^9.5",
-        "roave/security-advisories": "dev-latest",
-        "vimeo/psalm": "^5.24"
+        "ergebnis/composer-normalize": "^2.54",
+        "phpmd/phpmd": "^3.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpunit/phpunit": "^11.5",
+        "roave/security-advisories": "dev-latest"
     },
     "autoload": {
         "psr-4": {
@@ -50,11 +50,10 @@
         "quality": [
             "composer normalize --dry-run",
             "@test-unit",
-            "psalm --find-unused-psalm-suppress",
             "phpstan analyse",
             "@style-check",
-            "phpmd src ansi codesize,controversial,naming,unusedcode",
-            "phpmd tests ansi codesize,controversial,design"
+            "phpmd analyze src --format ansi --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode",
+            "phpmd analyze tests --format ansi --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/data/*' --exclude '*tests/dataAttrib/*' --exclude '*tests/dataMixed/*'"
         ],
         "style-check": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run",
         "style-fix": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no",

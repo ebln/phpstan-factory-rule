@@ -16,16 +16,21 @@ class AttribForceFactoryRuleTest extends RuleTestCase
 {
     private const ERROR_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct!";
 
-    // Sadly this remains a vector, as phpstan fails to infer the created class name
+    private const LOOPHOLE_MESSAGE = 'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory!' . "\n    💡 Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\ForcedFactory or Test\Ebln\PHPStan\EnforceFactory\dataAttrib\TraitFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\LoopholeProduct!";
+
+    // Since PHPStan 2.3 the concatenated class name is inferred as constant strings, so the former loophole is reported
     public function testLoopholeFactory(): void
     {
-        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php'], []);
+        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php'], [
+            [self::LOOPHOLE_MESSAGE, 17],
+        ]);
     }
 
-    // Sadly this remains a vector, as phpstan fails to infer the created class name
     public function testLoopholeInvoker(): void
     {
-        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php', __DIR__ . '/dataAttrib/LoopholeInvoker.php'], []);
+        $this->analyse([__DIR__ . '/dataAttrib/LoopholeFactory.php', __DIR__ . '/dataAttrib/LoopholeInvoker.php'], [
+            [self::LOOPHOLE_MESSAGE, 17],
+        ]);
     }
 
     public function testEmptyAllowedClasses(): void
