@@ -5,15 +5,16 @@ declare(strict_types=1);
 $finder = PhpCsFixer\Finder::create()
     ->exclude('vendor')
     ->exclude('tests')
+    ->exclude('.worktrees')
     ->in(__DIR__);
 
 $rules = [
     '@PER-CS'                                          => true,
     '@Symfony'                                         => true,
     '@PhpCsFixer'                                      => true,
-    '@PHPUnit10x0Migration:risky'                     => true,
-    '@PHP8x0Migration:risky'                          => true,
-    '@PHP8x2Migration'                                => true,
+    '@PHPUnit10x0Migration:risky'                      => true,
+    '@PHP8x0Migration:risky'                           => true,
+    '@PHP8x2Migration'                                 => true,
     'no_superfluous_phpdoc_tags'                       => true,
     'native_function_invocation'                       => false,
     'concat_space'                                     => ['spacing' => 'one'],

@@ -1,46 +1,34 @@
-name: PHPUnit Tests via Composer
+name: Tests
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.operating-system }}
+  test:
+    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        operating-system: [ ubuntu-latest ]
-        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
-    name: Build and test on ${{ matrix.php }}
+        php: ['8.2', '8.3', '8.4', '8.5']
+        deps: [locked]
+        include:
+          - php: '8.2'
+            deps: lowest
+    name: PHP ${{ matrix.php }} (${{ matrix.deps }})
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Force PHP ${{ matrix.php }}
-        uses: nanasess/setup-php@v4
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-      - name: Validate composer.json and composer.lock
-        run: composer validate
-      - name: Require php-cs-fixer
-        run: |
-          mkdir --parents ./tools/php-cs-fixer
-          composer require --working-dir=tools/php-cs-fixer friendsofphp/php-cs-fixer "friendsofphp/php-cs-fixer" --prefer-dist --no-progress
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Unit tests
-        run: |
-          mkdir --parents ./src ./tests
-          ./vendor/bin/phpunit --no-coverage --colors=never
-      - name: Psalm
-        run: |
-          ./vendor/bin/psalm --monochrome --no-progress --stats --show-info=false
-      - name: phpstan
-        run: |
-          ./vendor/bin/phpstan --no-interaction --no-ansi analyse
-      - name: Mess Detector Sources
-        run: |
-          ./vendor/bin/phpmd src text codesize,controversial,naming,unusedcode
-      - name: Mess Detector Tests
-        run: |
-          ./vendor/bin/phpmd tests text codesize,controversial,design
-      - name: php-cs-fixer
-        run: |
-          ./tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
+          tools: composer, php-cs-fixer
+          coverage: none
+      - run: composer validate --strict
+      - run: composer install --prefer-dist --no-progress
+        if: matrix.deps == 'locked'
+      - run: composer update --prefer-lowest --prefer-dist --no-progress
+        if: matrix.deps == 'lowest'
+      - run: vendor/bin/phpunit --no-coverage --colors=never
+      - run: vendor/bin/phpstan analyse --no-interaction --no-ansi
+      - run: vendor/bin/phpmd analyze src --format text --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode
+      - run: vendor/bin/phpmd analyze tests --format text --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/Fixtures/*'
+      - run: php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
+        if: matrix.deps == 'locked'
