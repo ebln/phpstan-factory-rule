@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ebln\PHPStan\EnforceFactory;
 
-use Ebln\Attrib\ForceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
@@ -16,6 +15,8 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 class ForceFactoryRule implements Rule
 {
+    public function __construct(private readonly AllowedFactoriesResolver $resolver) {}
+
     public function getNodeType(): string
     {
         return Node\Expr\New_::class;
@@ -25,7 +26,7 @@ class ForceFactoryRule implements Rule
     {
         $errors = [];
         foreach ($this->instantiatedClasses($node, $scope) as $class) {
-            $allowedFactories = $this->getFactoriesFromAttribute($class);
+            $allowedFactories = $this->resolver->allowedFactories($class);
             if (null === $allowedFactories) {
                 continue; // newly instantiated class carries no ForceFactory attribute
             }
@@ -40,11 +41,8 @@ class ForceFactoryRule implements Rule
                 continue; // bogus configuration
             }
 
-            if (
-                $scope->isInClass()
-                && null !== $scope->getClassReflection() /** @phpstan-ignore notIdentical.alwaysTrue */
-                && in_array($scope->getClassReflection()->getName(), $allowedFactories, true)
-            ) {
+            $currentClass = $scope->getClassReflection()?->getName();
+            if (null !== $currentClass && in_array($currentClass, $allowedFactories, true)) {
                 continue; // happy case: created within an allowed factory class
             }
 
@@ -81,43 +79,5 @@ class ForceFactoryRule implements Rule
         }
 
         return array_values($classes);
-    }
-
-    /** @return null|list<class-string> */
-    private function getFactoriesFromAttribute(ClassReflection $class): ?array
-    {
-        $allowedFactories = [];
-        $reflection       = $class;
-        do {
-            $allowedFactories = [...$allowedFactories, ...$this->getFactoriesFromAttributeByClass($reflection->getNativeReflection())];
-        } while ($reflection = $reflection->getParentClass());
-
-        if ([] === $allowedFactories) {
-            return null;
-        }
-        $allowedFactories = array_values(array_filter($allowedFactories));
-        sort($allowedFactories);
-
-        return $allowedFactories;
-    }
-
-    /**
-     * @param \ReflectionClass<object> $reflection
-     *
-     * @return array<int, null|class-string>
-     */
-    private function getFactoriesFromAttributeByClass(\ReflectionClass $reflection): array
-    {
-        foreach ($reflection->getAttributes() as $attribute) {
-            if (ForceFactory::class === $attribute->getName()) {
-                /** @var ForceFactory $forceFactory */
-                $forceFactory     = $attribute->newInstance();
-                $allowedFactories = $forceFactory->factories;
-
-                return [] === $allowedFactories ? [null] : $allowedFactories;
-            }
-        }
-
-        return [];
     }
 }

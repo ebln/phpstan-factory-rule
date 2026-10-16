@@ -7,6 +7,7 @@ namespace Test\Ebln\PHPStan\EnforceFactory\dataAttrib;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ExtendedProduct;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\ForcedFactoryProduct;
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\FreeProduct;
+use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\MarkedChildProduct;
 
 class ForcedFactory
 {
@@ -105,5 +106,10 @@ class ForcedFactory
     public static function staticClass(): ForcedFactoryProduct
     {
         return new ForcedFactoryProduct();
+    }
+
+    public function createChild(): MarkedChildProduct
+    {
+        return new MarkedChildProduct();
     }
 }

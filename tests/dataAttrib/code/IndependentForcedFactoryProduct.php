@@ -6,7 +6,7 @@ namespace Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code;
 
 use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\IndependentFactory;
 
-#[\Ebln\Attrib\ForceFactory(IndependentFactory::class)]
+#[\Ebln\Attrib\ForceFactory(IndependentFactory::class, '\test\ebln\phpstan\enforcefactory\dataattrib\independentfactory')]
 class IndependentForcedFactoryProduct
 {
 }

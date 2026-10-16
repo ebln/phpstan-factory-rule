@@ -1,2 +1,6 @@
-rules:
-    - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule
+services:
+    -
+        class: Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver
+    -
+        class: Ebln\PHPStan\EnforceFactory\ForceFactoryRule
+        tags: [phpstan.rules.rule]

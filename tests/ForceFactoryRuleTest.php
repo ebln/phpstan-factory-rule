@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Test\Ebln\PHPStan\EnforceFactory;
 
+use Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver;
 use Ebln\PHPStan\EnforceFactory\ForceFactoryRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
@@ -67,11 +68,6 @@ class ForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/dataAttrib/TraitFactory.php', __DIR__ . '/dataAttrib/FactoryTrait.php'], []);
     }
 
-    public function testAllowedFactory(): void
-    {
-        $this->analyse([__DIR__ . '/dataAttrib/ForcedFactory.php'], []);
-    }
-
     public function testIndependentFactory(): void
     {
         $offset = 1;
@@ -94,8 +90,35 @@ class ForceFactoryRuleTest extends RuleTestCase
         ]);
     }
 
+    public function testParentFactoryCannotBuildMarkedChild(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/ForcedFactory.php'], [
+            [
+                'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\MarkedChildProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\MarkedChildFactory!',
+                113,
+                'Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\MarkedChildFactory to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\MarkedChildProduct!',
+            ],
+        ]);
+    }
+
+    public function testMarkedChildFactoryIsAllowed(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/MarkedChildFactory.php'], []);
+    }
+
+    public function testInterfaceIsNotAFactory(): void
+    {
+        $this->analyse([__DIR__ . '/dataAttrib/InterfaceFactory.php'], [
+            [
+                'Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\InterfaceListedProduct must be instantiated by Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\FactoryInterface!',
+                14,
+                'Only use Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\FactoryInterface to create an instance of Test\Ebln\PHPStan\EnforceFactory\dataAttrib\code\InterfaceListedProduct!',
+            ],
+        ]);
+    }
+
     protected function getRule(): Rule
     {
-        return new ForceFactoryRule();
+        return new ForceFactoryRule(new AllowedFactoriesResolver(self::createReflectionProvider()));
     }
 }
