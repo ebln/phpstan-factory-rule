@@ -3,11 +3,28 @@ ebln/phpstan-factory-rule
 
 Enforce that your classes get only instantiated by the factories you define!
 
-## Usage with support for attributes
-Require this package: `composer require --dev ebln/phpstan-factory-rule`
+## Installation
 
-Add the `ForceFactory` attribute to your class, and supply all class names as arguments,
-which shall be allowed to instanciate your object.
+Require this extension via [Composer](https://getcomposer.org/):
+
+```shell
+composer require --dev ebln/phpstan-factory-rule
+```
+
+If you also use [phpstan/extension-installer](https://github.com/phpstan/extension-installer) you are all set.
+Otherwise include the rules in your project's PHPStan config:
+
+```neon
+includes:
+    - vendor/ebln/phpstan-factory-rule/rules.neon
+```
+
+Requires PHP 8.2+ and PHPStan 2.2+.
+
+## Usage
+
+Add the `ForceFactory` attribute to your class and list the classes that are allowed to instantiate it:
+
 ```php
 <?php
 // […]
@@ -18,8 +35,9 @@ class OnlyViaFactory
 }
 ```
 
-Now lean back and rely on PHPStan in CI pipelines, git hooks or IDE integrations;
+Now lean back and rely on PHPStan in CI pipelines, git hooks or IDE integrations.
 If somebody introduces a rogue factory:
+
 ```php
 <?php
 // […]
@@ -27,72 +45,73 @@ If somebody introduces a rogue factory:
 class FailingFactory
 {
     public function create(): OnlyViaFactory
-    {   
+    {
         return new OnlyViaFactory();
     }
 }
 ```
-…that is supposed to fail, when you run PHPStan.
 
-## Deprecated usage with `ebln/phpstan-factory-mark`
-
-Require this extention and [the package containing the marking interface](https://github.com/ebln/phpstan-factory-mark) via [Composer](https://getcomposer.org/) alongside with PHPStan:
-```shell
-composer require ebln/phpstan-factory-mark
-composer require --dev ebln/phpstan-factory-rule
-```
-
-Implement `\Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` with the DTO you want to protect.
-```php
-<?php
-// […]
-use Ebln\PHPStan\EnforceFactory\ForceFactoryInterface;
-
-class OnlyViaFactory implements ForceFactoryInterface
-{
-    // […]
-    public static function getFactories(): array
-    {   // Return a list of classes that are allowed to
-        //   create new OnlyViaFactory instances…
-        return [TheOnlyTrueFactory::class];
-    }
-}
-```
-Now rely on PHPStan in CI pipelines, git hooks or IDE integrations.
-
-If somebody introduces a rogue factory:
-```php
-<?php
-// […]
-
-class FailingFactory
-{
-    public function create(): OnlyViaFactory
-    {   
-        return new OnlyViaFactory();
-    }
-}
-```
-…that is supposed to fail, when you run PHPStan.
-
-## Installation
-
-Require this extention via [Composer](https://getcomposer.org/):
-
-```php
-composer require --dev ebln/phpstan-factory-rule
-```
-
-If you also install [phpstan/extension-installer](https://github.com/phpstan/extension-installer) then you're all set!
-
-<details>
-  <summary>Manual installation</summary>
-
-If you don't want to use `phpstan/extension-installer`, just specify the rule in your project's PHPStan config:
+…PHPStan reports it:
 
 ```
-rules:
-    - \Ebln\PHPStan\EnforceFactory\ForceFactoryRule
+OnlyViaFactory must be instantiated by GoodFactory or BetterFactory.
+💡 Move this instantiation into GoodFactory or BetterFactory, or add FailingFactory to the #[ForceFactory] attribute of OnlyViaFactory.
 ```
-</details>
 
+## Rules
+
+Every error carries an identifier, so you can silence a single kind in `phpstan.neon`:
+
+```neon
+parameters:
+    ignoreErrors:
+        - identifier: ebln.forceFactory.outsideFactory
+```
+
+| Identifier | Reported when |
+|---|---|
+| `ebln.forceFactory.outsideFactory` | a marked class is instantiated outside the classes its attribute lists |
+| `ebln.forceFactory.noFactories` | the attribute lists no factory, or none that PHPStan can resolve to a class name constant |
+| `ebln.forceFactory.unknownFactory` | the attribute names a class that does not exist (one error per name) |
+| `ebln.forceFactory.invalidTarget` | the attribute sits on an interface, trait or enum |
+| `ebln.forceFactory.legacyInterface` | a class still implements the removed `Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` |
+
+## Semantics
+
+- **Nearest attribute wins.** A class inherits the attribute of its closest marked ancestor. A marked child of a marked parent is governed by its own list only, so the parent's factory may not create the child.
+- **Closures count as inside.** A closure or arrow function inside a listed factory may instantiate the product. An anonymous class inside a factory may not, and neither may a subclass of a factory: list the subclass explicitly.
+- **A factory is a class.** The attribute takes class name constants of classes (or enums). Naming an interface does not allow its implementations; the instantiation inside them is reported.
+- **Factory names are canonicalised.** Casing and a leading backslash do not matter. A name that does not resolve to a class is ignored by the instantiation rule and reported by the definition rule when PHPStan analyses the marked class's own file. A marked class in a path PHPStan does not analyse, such as `vendor/`, is therefore not enforced if all its names are mistyped.
+- **Unknown classes are skipped.** `new Missing()` is PHPStan's own business and never prevents the rest of the file from being checked.
+
+### Known loophole
+
+The rule follows PHPStan's type inference for `new $name`. Object-typed and `class-string<T>` typed variables are
+checked, but a plain `string` variable is not, because its type does not say which class it holds.
+
+The declared type also decides which attribute applies. `new $product` with `$product` typed as a marked parent
+class is checked against the parent's list, even when the object at runtime is a marked subclass with a list of
+its own.
+
+### Why `--dev` is enough
+
+PHP does not load an attribute's class unless something reflects on it, so the attribute class may come from a
+`require-dev` package. The `Ebln\Attrib\ForceFactory` class ships in this package; nothing else is needed at runtime.
+
+## Upgrading from 2.x
+
+- Register the rules through `rules.neon` (see Installation). A manual `rules:` entry naming
+  `ForceFactoryRule`, the 2.x way without extension-installer, now fails at container build with
+  "Service of type Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver … not found", and it never
+  registers the definition rule.
+- The marker interface is gone. Remove `ebln/phpstan-factory-mark` from your project: this package declares a
+  composer conflict with every version of it, and `ebln.forceFactory.legacyInterface` reports every class that
+  still implements the interface.
+- Attribute arguments are unchanged: positional class name constants. The rule reads only those. An argument it
+  cannot resolve, including a named one such as `factory: MyFactory::class`, counts as no factory and is reported
+  by `ebln.forceFactory.noFactories`, although PHP keeps it in `$factories` at runtime.
+- `ForceFactory::getAllowedFactories()` is replaced by the public readonly property `$factories`.
+- Identifiers: `ebln.forceFactory.outOfFactoryInstanciation` became `ebln.forceFactory.outsideFactory`;
+  `ebln.forceFactory.bogusDefinition` was split into the definition rule's identifiers above.
+- Inheritance: 2.x merged the attributes of the whole parent chain; 3.0 uses the nearest attribute only.
+- Floors: PHP 8.2 and PHPStan 2.2.
