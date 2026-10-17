@@ -101,6 +101,14 @@ final class ForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/MarkedChildFactory.php'], []);
     }
 
+    // adding RogueChildFactory to the child's attribute would fail the covariance check, so the tip only says "move"
+    public function testTipOmitsAFactoryTheParentForbids(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Instantiation/RogueChildFactory.php'], [
+            self::outside(self::NS . 'code\MarkedChildProduct', [self::NS . 'MarkedChildFactory'], null, 13),
+        ]);
+    }
+
     public function testInterfaceIsNotAFactory(): void
     {
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/InterfaceFactory.php'], [

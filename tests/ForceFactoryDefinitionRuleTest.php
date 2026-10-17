@@ -105,6 +105,37 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
         ]);
     }
 
+    public function testChildMayNarrowTheFactories(): void
+    {
+        $this->analyse([
+            __DIR__ . '/Fixtures/Definition/NarrowingChild.php',
+            __DIR__ . '/Fixtures/Definition/SameListChild.php',
+            __DIR__ . '/Fixtures/Definition/UnmarkedChild.php',
+        ], []);
+    }
+
+    public function testChildMayNotWidenTheFactories(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/WideningChild.php'], [
+            [
+                '#[ForceFactory] on ' . self::NS . 'WideningChild names ' . self::NS . 'UnrelatedFactory, which is not a subclass of a factory of ' . self::NS . 'MarkedParent (' . self::NS . 'RealFactory).',
+                9,
+                self::covariantTip(self::NS . 'RealFactory'),
+            ],
+        ]);
+    }
+
+    public function testGrandchildIsCheckedAgainstTheNearestMarkedAncestor(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/WideningGrandchild.php'], [
+            [
+                '#[ForceFactory] on ' . self::NS . 'WideningGrandchild names ' . self::NS . 'UnrelatedFactory, which is not a subclass of a factory of ' . self::NS . 'MarkedParent (' . self::NS . 'RealFactory).',
+                9,
+                self::covariantTip(self::NS . 'RealFactory'),
+            ],
+        ]);
+    }
+
     public function testValid(): void
     {
         $this->analyse([__DIR__ . '/Fixtures/Definition/Valid.php'], []);
@@ -113,5 +144,10 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
     protected function getRule(): Rule
     {
         return self::getContainer()->getByType(ForceFactoryDefinitionRule::class);
+    }
+
+    private static function covariantTip(string $parentFactories): string
+    {
+        return 'A subclass may only narrow the factories of its parent: list ' . $parentFactories . ' or a subclass of it.';
     }
 }

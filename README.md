@@ -74,11 +74,13 @@ parameters:
 | `ebln.forceFactory.noFactories` | the attribute lists no factory, or none that PHPStan can resolve to a class name constant |
 | `ebln.forceFactory.unknownFactory` | the attribute names a class that does not exist (one error per name) |
 | `ebln.forceFactory.invalidTarget` | the attribute sits on an interface, trait or enum |
+| `ebln.forceFactory.factoryNotCovariant` | a marked subclass lists a factory that is neither a factory of its nearest marked ancestor nor a subclass of one |
 | `ebln.forceFactory.legacyInterface` | a class still implements the removed `Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` |
 
 ## Semantics
 
-- **Nearest attribute wins.** A class inherits the attribute of its closest marked ancestor. A marked child of a marked parent is governed by its own list only, so the parent's factory may not create the child.
+- **Nearest attribute wins.** A class inherits the attribute of its closest marked ancestor. A marked child of a marked parent is governed by its own list only, so the parent's factory may not create the child unless the child lists it.
+- **Factories narrow with the product.** An instance of a subclass is also an instance of the parent, so the parent's promise covers it. A marked subclass may therefore only list factories of its nearest marked ancestor or subclasses of them; anything else is reported by the definition rule. Declaring the parent's factories `final` closes the set: no subclass of a factory can exist, so only the listed factories remain.
 - **Closures count as inside.** A closure or arrow function inside a listed factory may instantiate the product. An anonymous class inside a factory may not, and neither may a subclass of a factory: list the subclass explicitly.
 - **A factory is a class.** The attribute takes class name constants of classes (or enums). Naming an interface does not allow its implementations; the instantiation inside them is reported.
 - **Factory names are canonicalised.** Casing and a leading backslash do not matter. A name that does not resolve to a class is ignored by the instantiation rule and reported by the definition rule when PHPStan analyses the marked class's own file. A marked class in a path PHPStan does not analyse, such as `vendor/`, is therefore not enforced if all its names are mistyped.

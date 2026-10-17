@@ -65,6 +65,25 @@ final class AllowedFactoriesResolver
         return $this->allowedByClass[$key] = null === $declared ? null : $this->canonicalise($declared);
     }
 
+    /** The closest marked class strictly above the given class, or null when no ancestor carries the attribute. */
+    public function markedAncestor(ClassReflection $class): ?ClassReflection
+    {
+        $parent = $class->getParentClass();
+
+        return null === $parent ? null : $this->attributeHolder($parent);
+    }
+
+    /**
+     * Whether the class is one of the given factories or a subclass of one: the factories a
+     * marked subclass may list, given the factories of its marked ancestor.
+     *
+     * @param list<class-string> $factories
+     */
+    public function isFactoryOrSubclass(ClassReflection $class, array $factories): bool
+    {
+        return [] !== array_intersect([$class->getName(), ...$class->getParentClassesNames()], $factories);
+    }
+
     /**
      * The class whose attribute governs the given class: itself, or its closest marked
      * ancestor. Null when no class in the chain carries the attribute.

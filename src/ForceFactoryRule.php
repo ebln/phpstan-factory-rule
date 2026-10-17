@@ -57,7 +57,12 @@ class ForceFactoryRule implements Rule
         }
 
         // name the class that carries the attribute: an attribute added to a subclass would replace the inherited list
-        $holder = $this->resolver->attributeHolder($product) ?? $product;
+        $holder    = $this->resolver->attributeHolder($product) ?? $product;
+        $ancestor  = $this->resolver->markedAncestor($holder);
+        $inherited = null === $ancestor ? [] : ($this->resolver->allowedFactories($ancestor) ?? []);
+        if ([] !== $inherited && !$this->resolver->isFactoryOrSubclass($currentClass, $inherited)) {
+            return $tip . '.'; // the definition rule would reject this class: it does not narrow the ancestor's factories
+        }
 
         return sprintf('%s, or add %s to the #[ForceFactory] attribute of %s.', $tip, $currentClass->getName(), $holder->getName());
     }

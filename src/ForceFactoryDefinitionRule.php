@@ -93,6 +93,47 @@ final class ForceFactoryDefinitionRule implements Rule
             }
         }
 
+        return array_merge($errors, $this->covarianceErrors($class));
+    }
+
+    /**
+     * Factories narrow with the product: every factory of a marked subclass must be one of the
+     * nearest marked ancestor's factories or a subclass of one. Unknown names are left to
+     * unknownFactory; an ancestor without usable factories is left to its own noFactories.
+     *
+     * @return list<IdentifierRuleError>
+     */
+    private function covarianceErrors(ClassReflection $class): array
+    {
+        $ancestor = $this->resolver->markedAncestor($class);
+        if (null === $ancestor) {
+            return [];
+        }
+        $ancestorFactories = $this->resolver->allowedFactories($ancestor) ?? [];
+        if ([] === $ancestorFactories) {
+            return [];
+        }
+
+        $errors = [];
+        foreach ($this->resolver->allowedFactories($class) ?? [] as $factory) {
+            if (!$this->resolver->isFactoryOrSubclass($this->reflectionProvider->getClass($factory), $ancestorFactories)) {
+                $errors[] = RuleErrorBuilder::message(sprintf(
+                    '#[ForceFactory] on %s names %s, which is not a subclass of a factory of %s (%s).',
+                    $class->getName(),
+                    $factory,
+                    $ancestor->getName(),
+                    implode(' or ', $ancestorFactories),
+                ))
+                    ->identifier('ebln.forceFactory.factoryNotCovariant')
+                    ->tip(sprintf(
+                        'A subclass may only narrow the factories of its parent: list %s or a subclass of it.',
+                        implode(' or ', $ancestorFactories),
+                    ))
+                    ->build()
+                ;
+            }
+        }
+
         return $errors;
     }
 
