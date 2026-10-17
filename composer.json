@@ -54,7 +54,7 @@
             "@test-unit",
             "phpstan analyse",
             "@style-check",
-            "phpmd analyze src --format ansi --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode",
+            "phpmd analyze attrib src --format ansi --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode",
             "phpmd analyze tests --format ansi --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/Fixtures/*'"
         ],
         "style-check": "php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run",

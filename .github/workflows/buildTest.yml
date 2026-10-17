@@ -28,7 +28,7 @@ jobs:
         if: matrix.deps == 'lowest'
       - run: vendor/bin/phpunit --no-coverage --colors=never
       - run: vendor/bin/phpstan analyse --no-interaction --no-ansi
-      - run: vendor/bin/phpmd analyze src --format text --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode
+      - run: vendor/bin/phpmd analyze attrib src --format text --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode
       - run: vendor/bin/phpmd analyze tests --format text --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/Fixtures/*'
       - run: php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
         if: matrix.deps == 'locked'

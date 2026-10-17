@@ -8,6 +8,7 @@ parameters:
         min: 80200
         max: 80599
     paths:
+        - attrib
         - src
         - tests
     excludePaths:
