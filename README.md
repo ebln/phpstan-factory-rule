@@ -94,6 +94,10 @@ The rule follows PHPStan's type inference for `new $name`. Object-typed and `cla
 checked, but a plain `string` variable is not, because its type does not say which class it holds. A union of a class
 name constant with a plain string is absorbed into `string` by PHPStan and is not checked either.
 
+Instances created through reflection are not checked: `ReflectionClass::newInstance()`, `newInstanceArgs()`,
+`newInstanceWithoutConstructor()` and the PHP 8.4 lazy-object methods bypass both rules. A rule for them is planned
+for a later minor release.
+
 The declared type also decides which attribute applies. `new $product` with `$product` typed as a marked parent
 class is checked against the parent's list, even when the object at runtime is a marked subclass with a list of
 its own.
