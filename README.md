@@ -11,7 +11,7 @@ Require this extension via [Composer](https://getcomposer.org/):
 composer require --dev ebln/phpstan-factory-rule
 ```
 
-If you also use [phpstan/extension-installer](https://github.com/phpstan/extension-installer) you are all set.
+If you also use [phpstan/extension-installer](https://github.com/phpstan/extension-installer), no further setup is needed.
 Otherwise include the rules in your project's PHPStan config:
 
 ```neon
@@ -35,7 +35,7 @@ class OnlyViaFactory
 }
 ```
 
-Now lean back and rely on PHPStan in CI pipelines, git hooks or IDE integrations.
+PHPStan then checks every instantiation, in CI pipelines, git hooks or IDE integrations.
 If somebody introduces a rogue factory:
 
 ```php
@@ -87,7 +87,7 @@ parameters:
 - **A factory is a class.** The attribute takes class name constants of classes (or enums). An interface or a trait in the list is reported by the definition rule, because no `new` ever runs in their scope: naming an interface does not allow its implementations.
 - **Factory names are canonicalised.** Casing and a leading backslash do not matter. A name that does not resolve to a class is dropped and reported by the definition rule when PHPStan analyses the marked class's own file.
 - **A broken list fails closed.** When no name is left, nothing may create the class: every `new` is reported with `noFactories` until the attribute is fixed. A mistyped list in a path PHPStan does not analyse, such as `vendor/`, therefore still shows up where the class is used.
-- **Unknown classes are skipped.** `new Missing()` is PHPStan's own business and never prevents the rest of the file from being checked.
+- **Unknown classes are skipped.** PHPStan itself reports `new Missing()`. This rule skips it, and the rest of the file is still checked.
 
 ### Known loopholes
 
