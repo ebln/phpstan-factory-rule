@@ -63,15 +63,25 @@ final class ForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/IndependentFactory.php'], []);
     }
 
-    // Documented loophole: the class expression's type collapses to `object` once a non-constant string joins the union
-    public function testLoopholeFactory(): void
+    /**
+     * An unknown class in the union turns the `new` expression's type into an error type that hides the
+     * product; the constant strings of the class expression still name it. The plain-string union on
+     * line 22 is the documented loophole: its type is `string`, and nothing can be reported.
+     */
+    public function testUnknownClassInUnionDoesNotHideTheProduct(): void
     {
-        $this->analyse([__DIR__ . '/Fixtures/Instantiation/LoopholeFactory.php'], []);
+        $product = self::NS . 'code\LoopholeProduct';
+        $this->analyse([__DIR__ . '/Fixtures/Instantiation/LoopholeFactory.php'], [
+            self::outside($product, self::FACTORIES, self::NS . 'LoopholeFactory', 14),
+        ]);
     }
 
-    public function testLoopholeInvoker(): void
+    public function testLoopholeInvokerAddsNothing(): void
     {
-        $this->analyse([__DIR__ . '/Fixtures/Instantiation/LoopholeFactory.php', __DIR__ . '/Fixtures/Instantiation/LoopholeInvoker.php'], []);
+        $product = self::NS . 'code\LoopholeProduct';
+        $this->analyse([__DIR__ . '/Fixtures/Instantiation/LoopholeFactory.php', __DIR__ . '/Fixtures/Instantiation/LoopholeInvoker.php'], [
+            self::outside($product, self::FACTORIES, self::NS . 'LoopholeFactory', 14),
+        ]);
     }
 
     public function testUnknownClassDoesNotAbortFile(): void

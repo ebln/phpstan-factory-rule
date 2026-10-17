@@ -13,15 +13,10 @@ class LoopholeInvoker
         $this->loopholeFactory = new LoopholeFactory();
     }
 
-    public function expectedFailingLoophole(): object
+    public function invokeBoth(): object
     {
-        $loophole = $this->loopholeFactory->variableUninferable(true);
+        $this->loopholeFactory->unknownClassInUnion(false);
 
-        return $loophole;
-    }
-
-    public function expectedMissingClass(): void
-    {
-        $this->loopholeFactory->variableUninferable(false);
+        return $this->loopholeFactory->stringInUnion(true, 'anything');
     }
 }

@@ -99,6 +99,14 @@ final class AllowedFactoriesResolver
         return null;
     }
 
+    /** The reflection of a class named by a constant string, or null when PHPStan does not know it. */
+    public function classNamed(string $name): ?ClassReflection
+    {
+        $name = ltrim($name, '\\');
+
+        return '' !== $name && $this->reflectionProvider->hasClass($name) ? $this->reflectionProvider->getClass($name) : null;
+    }
+
     /**
      * @param list<string> $names
      *
@@ -108,12 +116,11 @@ final class AllowedFactoriesResolver
     {
         $canonical = [];
         foreach ($names as $name) {
-            $name = ltrim($name, '\\');
-            if ('' === $name || !$this->reflectionProvider->hasClass($name)) {
+            $class = $this->classNamed($name);
+            if (null === $class) {
                 continue; // the definition rule reports unknown factories
             }
-            $className             = $this->reflectionProvider->getClass($name)->getName();
-            $canonical[$className] = $className;
+            $canonical[$class->getName()] = $class->getName();
         }
 
         return array_values($canonical);

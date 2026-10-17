@@ -72,6 +72,9 @@ class ForceFactoryRule implements Rule
      * the parent of an anonymous class, or the object/class-string type of a variable.
      * Unknown classes are not part of the inferred type and so are silently skipped.
      *
+     * The constant strings of a class expression are read as well: one unknown name in a
+     * union turns the type of the whole `new` into an error type that would hide the product.
+     *
      * @return list<ClassReflection>
      */
     private function instantiatedClasses(Node\Expr\New_ $node, Scope $scope): array
@@ -86,6 +89,14 @@ class ForceFactoryRule implements Rule
                 }
             }
             $classes[$reflection->getName()] = $reflection;
+        }
+        if ($node->class instanceof Node\Expr) {
+            foreach ($scope->getType($node->class)->getConstantStrings() as $constantString) {
+                $reflection = $this->resolver->classNamed($constantString->getValue());
+                if (null !== $reflection) {
+                    $classes[$reflection->getName()] = $reflection;
+                }
+            }
         }
 
         return array_values($classes);
