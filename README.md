@@ -74,6 +74,7 @@ parameters:
 | `ebln.forceFactory.noFactories` | the attribute lists no factory, or none that PHPStan can resolve to an existing class; reported on the attribute and at every instantiation of the class |
 | `ebln.forceFactory.unknownFactory` | the attribute names a class that does not exist (one error per name) |
 | `ebln.forceFactory.invalidFactory` | the attribute names an interface or a trait as a factory |
+| `ebln.forceFactory.namedArgument` | the attribute passes a named argument; the rule reads positional arguments only (one error per name) |
 | `ebln.forceFactory.invalidTarget` | the attribute sits on an interface, trait or enum |
 | `ebln.forceFactory.factoryNotCovariant` | a marked subclass lists a factory that is neither a factory of its nearest marked ancestor nor a subclass of one |
 | `ebln.forceFactory.legacyInterface` | a class still implements the removed `Ebln\PHPStan\EnforceFactory\ForceFactoryInterface` |
@@ -116,9 +117,9 @@ PHP does not load an attribute's class unless something reflects on it, so the a
 - The marker interface is gone. Remove `ebln/phpstan-factory-mark` from your project: this package declares a
   composer conflict with every version of it, and `ebln.forceFactory.legacyInterface` reports every class that
   still implements the interface.
-- Attribute arguments are unchanged: positional class name constants. The rule reads only those. An argument it
-  cannot resolve, including a named one such as `factory: MyFactory::class`, counts as no factory and is reported
-  by `ebln.forceFactory.noFactories`, although PHP keeps it in `$factories` at runtime.
+- Attribute arguments are unchanged: positional class name constants. The rule reads only those. A named argument
+  such as `factory: MyFactory::class` is reported by `ebln.forceFactory.namedArgument`: PHP keeps it in `$factories`
+  at runtime, but PHPStan drops it, and the factory it names would not be allowed.
 - `ForceFactory::getAllowedFactories()` is replaced by the public readonly property `$factories`.
 - Identifiers: `ebln.forceFactory.outOfFactoryInstanciation` became `ebln.forceFactory.outsideFactory`;
   `ebln.forceFactory.bogusDefinition` was split into the definition rule's identifiers above.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ebln\PHPStan\EnforceFactory;
 
+use Ebln\Attrib\ForceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
@@ -56,11 +57,18 @@ final class ForceFactoryDefinitionRule implements Rule
             return $errors; // a declaration the provider cannot reflect: nothing to validate
         }
 
-        return array_merge($errors, $this->attributeErrors($this->reflectionProvider->getClass($className)));
+        return array_merge(
+            $errors,
+            $this->attributeErrors($this->reflectionProvider->getClass($className), $this->namedArguments($node, $scope)),
+        );
     }
 
-    /** @return list<IdentifierRuleError> */
-    private function attributeErrors(ClassReflection $class): array
+    /**
+     * @param list<string> $namedArguments
+     *
+     * @return list<IdentifierRuleError>
+     */
+    private function attributeErrors(ClassReflection $class, array $namedArguments): array
     {
         $declared = $this->resolver->declaredFactories($class);
         if (null === $declared) {
@@ -77,8 +85,16 @@ final class ForceFactoryDefinitionRule implements Rule
             ];
         }
 
+        $errors = [];
+        foreach ($namedArguments as $name) {
+            $errors[] = RuleErrorBuilder::message(sprintf('#[ForceFactory] on %s passes the named argument %s.', $class->getName(), $name))
+                ->identifier('ebln.forceFactory.namedArgument')
+                ->tip('The rule reads positional arguments only: list every factory as a positional class name constant.')
+                ->build()
+            ;
+        }
         if ([] === $declared) {
-            return [
+            return [] !== $errors ? $errors : [
                 RuleErrorBuilder::message(sprintf('#[ForceFactory] on %s lists no factory classes.', $class->getName()))
                     ->identifier('ebln.forceFactory.noFactories')
                     ->tip('Pass at least one class name constant, e.g. #[ForceFactory(MyFactory::class)].')
@@ -86,7 +102,32 @@ final class ForceFactoryDefinitionRule implements Rule
             ];
         }
 
-        return array_merge($this->factoryErrors($class, $declared), $this->covarianceErrors($class));
+        return array_merge($errors, $this->factoryErrors($class, $declared), $this->covarianceErrors($class));
+    }
+
+    /**
+     * Named arguments of #[ForceFactory] on this declaration. PHP collects them into $factories, but PHPStan's
+     * attribute reflection drops a name that matches no parameter, so they are read from the syntax tree.
+     *
+     * @return list<string>
+     */
+    private function namedArguments(Node\Stmt\ClassLike $classLike, Scope $scope): array
+    {
+        $names = [];
+        foreach ($classLike->attrGroups as $group) {
+            foreach ($group->attrs as $attribute) {
+                if (0 !== strcasecmp($scope->resolveName($attribute->name), ForceFactory::class)) {
+                    continue;
+                }
+                foreach ($attribute->args as $argument) {
+                    if (null !== $argument->name) {
+                        $names[] = $argument->name->toString();
+                    }
+                }
+            }
+        }
+
+        return $names;
     }
 
     /**

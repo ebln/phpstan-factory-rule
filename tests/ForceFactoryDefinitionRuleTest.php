@@ -23,6 +23,8 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
 
     private const INVALID_TARGET_TIP = 'Only classes can be instantiated; put the attribute on the class.';
 
+    private const NAMED_ARGUMENT_TIP = 'The rule reads positional arguments only: list every factory as a positional class name constant.';
+
     private const INVALID_FACTORY_TIP = 'List the classes that create the product; naming an interface or a trait allows nothing.';
 
     public static function getAdditionalConfigFiles(): array
@@ -37,10 +39,19 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
         ]);
     }
 
-    public function testNamedArgumentDoesNotCount(): void
+    // PHP keeps a named argument in $factories, PHPStan drops it: report the name instead of an empty list
+    public function testNamedArgumentIsReported(): void
     {
         $this->analyse([__DIR__ . '/Fixtures/Definition/NamedOnly.php'], [
-            ['#[ForceFactory] on ' . self::NS . 'NamedOnly lists no factory classes.', 9, self::NO_FACTORIES_TIP],
+            ['#[ForceFactory] on ' . self::NS . 'NamedOnly passes the named argument factory.', 9, self::NAMED_ARGUMENT_TIP],
+        ]);
+    }
+
+    // without the report, UnrelatedFactory would be dropped and every `new` in it reported as outside
+    public function testNamedArgumentNextToPositionalOnes(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/NamedNextToPositional.php'], [
+            ['#[ForceFactory] on ' . self::NS . 'NamedNextToPositional passes the named argument extra.', 9, self::NAMED_ARGUMENT_TIP],
         ]);
     }
 
