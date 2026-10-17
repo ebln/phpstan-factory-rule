@@ -92,6 +92,15 @@ final class ForceFactoryRuleTest extends RuleTestCase
         ]);
     }
 
+    /**
+     * Pinned loophole: `new static()` in an unmarked base class is typed as the base class, so a marked subclass
+     * that inherits the static constructor can be created anywhere through it.
+     */
+    public function testInheritedStaticConstructorIsNotChecked(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Instantiation/StaticConstructorBase.php', __DIR__ . '/Fixtures/Instantiation/StaticConstructorInvoker.php'], []);
+    }
+
     public function testUnknownClassDoesNotAbortFile(): void
     {
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/UnknownClassFactory.php'], [

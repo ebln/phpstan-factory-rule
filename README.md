@@ -89,7 +89,7 @@ parameters:
 - **A broken list fails closed.** When no name is left, nothing may create the class: every `new` is reported with `noFactories` until the attribute is fixed. A mistyped list in a path PHPStan does not analyse, such as `vendor/`, therefore still shows up where the class is used.
 - **Unknown classes are skipped.** `new Missing()` is PHPStan's own business and never prevents the rest of the file from being checked.
 
-### Known loophole
+### Known loopholes
 
 The rule follows PHPStan's type inference for `new $name`. Object-typed and `class-string<T>` typed variables are
 checked, but a plain `string` variable is not, because its type does not say which class it holds. A union of a class
@@ -102,6 +102,11 @@ for a later minor release.
 The declared type also decides which attribute applies. `new $product` with `$product` typed as a marked parent
 class is checked against the parent's list, even when the object at runtime is a marked subclass with a list of
 its own.
+
+`new static()` follows the same rule. In an unmarked base class it is typed as the base class. A marked subclass
+that inherits a static constructor such as `public static function create(): static` can therefore be created
+anywhere through it. Marking the base class closes this: the `new static()` is then checked against the base
+class's list.
 
 ### Why `--dev` is enough
 
