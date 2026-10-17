@@ -17,6 +17,8 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
 {
     private const NS = 'Test\Ebln\PHPStan\EnforceFactory\Fixtures\Definition\\';
 
+    private const INSTANTIATION_NS = 'Test\Ebln\PHPStan\EnforceFactory\Fixtures\Instantiation\\';
+
     private const NO_FACTORIES_TIP = 'Pass at least one class name constant, e.g. #[ForceFactory(MyFactory::class)].';
 
     private const INVALID_TARGET_TIP = 'Only classes can be instantiated; put the attribute on the class.';
@@ -168,6 +170,20 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
                 '#[ForceFactory] on ' . self::NS . 'WideningGrandchild names ' . self::NS . 'UnrelatedFactory, which is not a subclass of a factory of ' . self::NS . 'MarkedParent (' . self::NS . 'RealFactory).',
                 9,
                 self::covariantTip(self::NS . 'RealFactory'),
+            ],
+        ]);
+    }
+
+    // the instantiation tests must not rely on an attribute that the definition rule rejects
+    public function testInstantiationFixturesAreValidDefinitions(): void
+    {
+        $products = self::INSTANTIATION_NS . 'code\\';
+        $this->analyse(glob(__DIR__ . '/Fixtures/Instantiation/code/*.php') ?: [], [
+            ['#[ForceFactory] on ' . $products . 'EmptyProduct lists no factory classes.', 9, self::NO_FACTORIES_TIP],
+            [
+                '#[ForceFactory] on ' . $products . 'InterfaceListedProduct names interface ' . $products . 'FactoryInterface, which cannot be a factory.',
+                9,
+                self::INVALID_FACTORY_TIP,
             ],
         ]);
     }
