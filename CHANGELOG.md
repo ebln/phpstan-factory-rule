@@ -23,7 +23,7 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 ### Removed
 - Support for the marker interface `Ebln\PHPStan\EnforceFactory\ForceFactoryInterface`
 - Dependency on `ebln/phpstan-factory-mark`
-- Support for PHP < 8.2 and PHPStan < 2.2
+- Support for PHP < 8.2 and PHPStan < 2.2.13
 - `ForceFactory::getAllowedFactories()`, replaced by the public readonly property `$factories`
 - Identifier `ebln.forceFactory.bogusDefinition`
 - The modified copy of PHPStan's `InstantiationRule::getClassNames` and its license notice; the rule reads the expression type through PHPStan's public API instead

@@ -19,7 +19,7 @@ includes:
     - vendor/ebln/phpstan-factory-rule/rules.neon
 ```
 
-Requires PHP 8.2+ and PHPStan 2.2+.
+Requires PHP 8.2+ and PHPStan 2.2.13+.
 
 ## Usage
 
@@ -129,4 +129,4 @@ PHP does not load an attribute's class unless something reflects on it, so the a
 - Identifiers: `ebln.forceFactory.outOfFactoryInstanciation` became `ebln.forceFactory.outsideFactory`;
   `ebln.forceFactory.bogusDefinition` was split into the definition rule's identifiers above.
 - Inheritance: 2.x merged the attributes of the whole parent chain; 3.0 uses the nearest attribute only.
-- Floors: PHP 8.2 and PHPStan 2.2.
+- Floors: PHP 8.2 and PHPStan 2.2.13.
