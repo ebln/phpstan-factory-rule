@@ -21,6 +21,8 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
 
     private const INVALID_TARGET_TIP = 'Only classes can be instantiated; put the attribute on the class.';
 
+    private const INVALID_FACTORY_TIP = 'List the classes that create the product; naming an interface or a trait allows nothing.';
+
     public static function getAdditionalConfigFiles(): array
     {
         return [__DIR__ . '/../rules.neon'];
@@ -59,6 +61,40 @@ final class ForceFactoryDefinitionRuleTest extends RuleTestCase
     {
         $this->analyse([__DIR__ . '/Fixtures/Definition/UnknownFactory.php'], [
             ['#[ForceFactory] on ' . self::NS . 'UnknownFactory names unknown class Nope\Missing.', 9],
+        ]);
+    }
+
+    public function testInterfaceListedAsFactory(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/InterfaceAsFactory.php'], [
+            [
+                '#[ForceFactory] on ' . self::NS . 'InterfaceAsFactory names interface ' . self::NS . 'FactoryContract, which cannot be a factory.',
+                9,
+                self::INVALID_FACTORY_TIP,
+            ],
+        ]);
+    }
+
+    // one cause, one error: the interface is not also reported as failing the covariance check
+    public function testInterfaceListedByAMarkedSubclass(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/InterfaceAsFactoryChild.php'], [
+            [
+                '#[ForceFactory] on ' . self::NS . 'InterfaceAsFactoryChild names interface ' . self::NS . 'FactoryContract, which cannot be a factory.',
+                9,
+                self::INVALID_FACTORY_TIP,
+            ],
+        ]);
+    }
+
+    public function testTraitListedAsFactory(): void
+    {
+        $this->analyse([__DIR__ . '/Fixtures/Definition/TraitAsFactory.php'], [
+            [
+                '#[ForceFactory] on ' . self::NS . 'TraitAsFactory names trait ' . self::NS . 'FactoryHelper, which cannot be a factory.',
+                9,
+                self::INVALID_FACTORY_TIP,
+            ],
         ]);
     }
 

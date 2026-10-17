@@ -8,7 +8,7 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 ## [3.0.0]
 
 ### Added
-- `ForceFactoryDefinitionRule`, reporting attributes the instantiation rule cannot act on: `ebln.forceFactory.noFactories`, `ebln.forceFactory.unknownFactory`, `ebln.forceFactory.invalidTarget`, `ebln.forceFactory.factoryNotCovariant` for a marked subclass whose factories are not subclasses of its marked ancestor's, and `ebln.forceFactory.legacyInterface` for classes still implementing the removed marker interface
+- `ForceFactoryDefinitionRule`, reporting attributes the instantiation rule cannot act on: `ebln.forceFactory.noFactories`, `ebln.forceFactory.unknownFactory`, `ebln.forceFactory.invalidFactory` for an interface or trait listed as a factory, `ebln.forceFactory.invalidTarget`, `ebln.forceFactory.factoryNotCovariant` for a marked subclass whose factories are not subclasses of its marked ancestor's, and `ebln.forceFactory.legacyInterface` for classes still implementing the removed marker interface
 - Error tips telling where to move the instantiation or which class to add to the attribute
 
 ### Changed

@@ -86,14 +86,41 @@ final class ForceFactoryDefinitionRule implements Rule
             ];
         }
 
+        return array_merge($this->factoryErrors($class, $declared), $this->covarianceErrors($class));
+    }
+
+    /**
+     * @param list<string> $declared
+     *
+     * @return list<IdentifierRuleError>
+     */
+    private function factoryErrors(ClassReflection $class, array $declared): array
+    {
         $errors = [];
         foreach ($declared as $name) {
-            if (!$this->reflectionProvider->hasClass(ltrim($name, '\\'))) {
+            $factory = $this->resolver->classNamed($name);
+            if (null === $factory) {
                 $errors[] = $this->unknownFactory($class, $name);
+
+                continue;
+            }
+            $kind = $this->nonClassKind($factory);
+            if (null !== $kind) {
+                // no `new` ever runs in the scope of an interface or a trait, so such a name allows nothing
+                $errors[] = RuleErrorBuilder::message(sprintf(
+                    '#[ForceFactory] on %s names %s %s, which cannot be a factory.',
+                    $class->getName(),
+                    $kind,
+                    $factory->getName(),
+                ))
+                    ->identifier('ebln.forceFactory.invalidFactory')
+                    ->tip('List the classes that create the product; naming an interface or a trait allows nothing.')
+                    ->build()
+                ;
             }
         }
 
-        return array_merge($errors, $this->covarianceErrors($class));
+        return $errors;
     }
 
     /**
@@ -116,7 +143,11 @@ final class ForceFactoryDefinitionRule implements Rule
 
         $errors = [];
         foreach ($this->resolver->allowedFactories($class) ?? [] as $factory) {
-            if (!$this->resolver->isFactoryOrSubclass($this->reflectionProvider->getClass($factory), $ancestorFactories)) {
+            $reflection = $this->reflectionProvider->getClass($factory);
+            if (null !== $this->nonClassKind($reflection)) {
+                continue; // reported as invalidFactory: one cause, one error
+            }
+            if (!$this->resolver->isFactoryOrSubclass($reflection, $ancestorFactories)) {
                 $errors[] = RuleErrorBuilder::message(sprintf(
                     '#[ForceFactory] on %s names %s, which is not a subclass of a factory of %s (%s).',
                     $class->getName(),
@@ -153,6 +184,16 @@ final class ForceFactoryDefinitionRule implements Rule
         }
 
         return false;
+    }
+
+    /** 'interface' or 'trait' when the listed factory cannot run `new` in its own scope, else null. */
+    private function nonClassKind(ClassReflection $factory): ?string
+    {
+        return match (true) {
+            $factory->isInterface() => 'interface',
+            $factory->isTrait()     => 'trait',
+            default                 => null,
+        };
     }
 
     private function invalidTarget(ClassReflection $class): ?string
