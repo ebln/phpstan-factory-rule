@@ -7,6 +7,7 @@ namespace Ebln\PHPStan\EnforceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
@@ -27,8 +28,13 @@ class ForceFactoryRule implements Rule
         $errors = [];
         foreach ($this->instantiatedClasses($node, $scope) as $class) {
             $allowedFactories = $this->resolver->allowedFactories($class);
-            if (null === $allowedFactories || [] === $allowedFactories) {
-                continue; // no attribute in the chain, or an empty list: the definition rule reports the latter
+            if (null === $allowedFactories) {
+                continue; // no attribute in the chain
+            }
+            if ([] === $allowedFactories) {
+                $errors[] = $this->noFactories($class); // fail closed: a list that resolves to nothing allows nobody
+
+                continue;
             }
 
             $currentClass = $scope->getClassReflection();
@@ -46,6 +52,21 @@ class ForceFactoryRule implements Rule
         }
 
         return $errors;
+    }
+
+    private function noFactories(ClassReflection $product): IdentifierRuleError
+    {
+        $holder = $this->resolver->attributeHolder($product) ?? $product;
+
+        return RuleErrorBuilder::message(sprintf(
+            '%s cannot be instantiated: #[ForceFactory] on %s names no factory PHPStan can resolve.',
+            $product->getName(),
+            $holder->getName(),
+        ))
+            ->identifier('ebln.forceFactory.noFactories')
+            ->tip(sprintf('Fix the attribute on %s: list at least one existing class name constant.', $holder->getName()))
+            ->build()
+        ;
     }
 
     /** @param list<class-string> $allowedFactories */

@@ -14,7 +14,7 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 ### Changed
 - Nearest attribute wins: a class is governed by the attribute of its closest marked ancestor instead of the merged lists of the whole parent chain; a marked subclass may only narrow its ancestor's factories (same classes or subclasses of them)
 - Identifier `ebln.forceFactory.outsideFactory` replaces `ebln.forceFactory.outOfFactoryInstanciation`
-- Factory names are canonicalised (casing, leading backslash) before comparison; names that are not classes are ignored by the instantiation rule
+- Factory names are canonicalised (casing, leading backslash) before comparison; a name that is not a class is dropped, and a list with nothing left forbids every instantiation (`noFactories` at each `new`) instead of being ignored
 - The attribute is read through PHPStan's reflection; it is never instantiated during analysis
 - Composer conflict with every version of `ebln/phpstan-factory-mark`
 - The rules are registered through `rules.neon` (or extension-installer); a manual `rules:` entry naming `ForceFactoryRule` no longer works

@@ -53,9 +53,17 @@ final class ForceFactoryRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixtures/Instantiation/TraitFactory.php', __DIR__ . '/Fixtures/Instantiation/FactoryTrait.php'], []);
     }
 
-    public function testEmptyFactoryListIsNotEnforced(): void
+    // fail closed: an attribute whose list resolves to nothing forbids every instantiation
+    public function testEmptyFactoryListForbidsInstantiation(): void
     {
-        $this->analyse([__DIR__ . '/Fixtures/Instantiation/EmptyFactory.php'], []);
+        $product = self::NS . 'code\EmptyProduct';
+        $this->analyse([__DIR__ . '/Fixtures/Instantiation/EmptyFactory.php'], [
+            [
+                $product . ' cannot be instantiated: #[ForceFactory] on ' . $product . ' names no factory PHPStan can resolve.',
+                13,
+                'Fix the attribute on ' . $product . ': list at least one existing class name constant.',
+            ],
+        ]);
     }
 
     public function testIndependentFactoryWithCasedDuplicateName(): void
