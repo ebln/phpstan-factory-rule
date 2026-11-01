@@ -18,7 +18,6 @@
         "ergebnis/composer-normalize": "^2.15",
         "phpmd/phpmd": "^2.10",
         "phpunit/phpunit": "^9.5",
-        "roave/security-advisories": "dev-latest",
         "vimeo/psalm": "^5.24"
     },
     "autoload": {
