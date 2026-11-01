@@ -17,8 +17,7 @@
         "ergebnis/composer-normalize": "^2.54",
         "phpmd/phpmd": "^3.0",
         "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpunit/phpunit": "^11.5",
-        "roave/security-advisories": "dev-latest"
+        "phpunit/phpunit": "^11.5"
     },
     "conflict": {
         "ebln/phpstan-factory-mark": "*"

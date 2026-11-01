@@ -1,0 +1,59 @@
+version: 2
+
+updates:
+  # Commit SHAs of the actions in .github/workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Image digests in .github/ci/compose.yml. Each PHP image stays on its
+  # minor version; only its digest moves. Composer stays on major version 2.
+  - package-ecosystem: docker-compose
+    directory: /.github/ci
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: php
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: composer
+        update-types: ["version-update:semver-major"]
+    groups:
+      images:
+        patterns: ["*"]
+
+  # The same for the 2.x branch. Dependabot reads this file only from the
+  # default branch, so the 2.x entries live here.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: "2.x"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker-compose
+    directory: /.github/ci
+    target-branch: "2.x"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: php
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: composer
+        update-types: ["version-update:semver-major"]
+    groups:
+      images:
+        patterns: ["*"]
