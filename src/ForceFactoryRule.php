@@ -4,66 +4,49 @@ declare(strict_types=1);
 
 namespace Ebln\PHPStan\EnforceFactory;
 
-use Ebln\Attrib\ForceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Reflection\ClassReflection;
+use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * @implements \PHPStan\Rules\Rule<Node\Expr\New_>
+ * @implements Rule<Node\Expr\New_>
  */
 class ForceFactoryRule implements Rule
 {
-    private ReflectionProvider $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
-    {
-        $this->reflectionProvider = $reflectionProvider;
-    }
+    public function __construct(private readonly AllowedFactoriesResolver $resolver) {}
 
     public function getNodeType(): string
     {
-        return \PhpParser\Node\Expr\New_::class;
+        return Node\Expr\New_::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
     {
         $errors = [];
-        foreach ($this->getClassNames($node, $scope) as [$class, $isName]) {
-            if (!$isName) {
-                continue; // newly instantiated class name couldn't be infered
-            }
-            /** @var class-string $class → sadly Psalm cannot be convinced to return class-string for getClassNames in reasonable amount of time */
-            $allowedFactories = $this->getAllowedFactories($class);
+        foreach ($this->instantiatedClasses($node, $scope) as $class) {
+            $allowedFactories = $this->resolver->allowedFactories($class);
             if (null === $allowedFactories) {
-                continue; // newly instantiated class doesn't implement ForceFactory interface
+                continue; // no attribute in the chain
             }
-
             if ([] === $allowedFactories) {
-                $errors[] = RuleErrorBuilder::message(
-                    ltrim($class, '\\') . ' has either no factories defined or a conflict between interface and attribute!'
-                )->identifier('ebln.forceFactory.bogusDefinition')
-                    ->build()
-                ;
+                $errors[] = $this->noFactories($class); // fail closed: a list that resolves to nothing allows nobody
 
-                continue; // bogus configuration
+                continue;
             }
 
-            /** @psalm-suppress PossiblyNullReference | sad that even phpstan cannot infer that from isInClass */
-            if (
-                $scope->isInClass()
-                && null !== $scope->getClassReflection() /** @phpstan-ignore notIdentical.alwaysTrue */
-                && in_array($scope->getClassReflection()->getName(), $allowedFactories, true)
-            ) {
-                continue; // happy case: ForceFactoryInterface got created within an allowed class
+            $currentClass = $scope->getClassReflection();
+            if (null !== $currentClass && in_array($currentClass->getName(), $allowedFactories, true)) {
+                continue; // happy case: created within an allowed factory class
             }
 
             $errors[] = RuleErrorBuilder::message(
-                ltrim($class, '\\') . ' must be instantiated by ' . implode(' or ', $allowedFactories) . '!'
-            )->identifier('ebln.forceFactory.outOfFactoryInstanciation')
-                ->tip('Only use ' . implode(' or ', $allowedFactories) . ' to create an instance of ' . ltrim($class, '\\') . '!')
+                sprintf('%s must be instantiated by %s.', $class->getName(), implode(' or ', $allowedFactories))
+            )
+                ->identifier('ebln.forceFactory.outsideFactory')
+                ->tip($this->tip($class, $allowedFactories, $currentClass))
                 ->build()
             ;
         }
@@ -71,128 +54,72 @@ class ForceFactoryRule implements Rule
         return $errors;
     }
 
-    /**
-     * @phpstan-param class-string $className
-     *
-     * @return null|string[] List of FQCNs
-     *
-     * @phpstan-return null|class-string[]
-     */
-    private function getAllowedFactories(string $className): ?array
+    private function noFactories(ClassReflection $product): IdentifierRuleError
     {
-        $allowedFactories = $this->getFactoriesFromAttribute($className);
-        /** @phpstan-ignore-next-line phpstanApi.runtimeReflection (seems okay for now) */
-        if (is_a($className, ForceFactoryInterface::class, true)) {
-            /* phpstan-var class-string<ForceFactoryInterface> $className */
-            $interfaceFactories = $className::getFactories();
-            sort($interfaceFactories);
-            if (null === $allowedFactories) {
-                $allowedFactories = $interfaceFactories;
-            } elseif ($allowedFactories !== $interfaceFactories) {
-                $allowedFactories = []; // Will result in a bogus definition error
-            }
+        $holder = $this->resolver->attributeHolder($product) ?? $product;
+
+        return RuleErrorBuilder::message(sprintf(
+            '%s cannot be instantiated: #[ForceFactory] on %s names no factory PHPStan can resolve.',
+            $product->getName(),
+            $holder->getName(),
+        ))
+            ->identifier('ebln.forceFactory.noFactories')
+            ->tip(sprintf('Fix the attribute on %s: list at least one existing class name constant.', $holder->getName()))
+            ->build()
+        ;
+    }
+
+    /** @param list<class-string> $allowedFactories */
+    private function tip(ClassReflection $product, array $allowedFactories, ?ClassReflection $currentClass): string
+    {
+        $tip = 'Move this instantiation into ' . implode(' or ', $allowedFactories);
+        if (null === $currentClass || $currentClass->isAnonymous()) {
+            return $tip . '.'; // nothing nameable to add to the attribute
         }
 
-        return $allowedFactories;
+        // name the class that carries the attribute: an attribute added to a subclass would replace the inherited list
+        $holder    = $this->resolver->attributeHolder($product) ?? $product;
+        $ancestor  = $this->resolver->markedAncestor($holder);
+        $inherited = null === $ancestor ? [] : ($this->resolver->allowedFactories($ancestor) ?? []);
+        if ([] !== $inherited && !$this->resolver->isFactoryOrSubclass($currentClass, $inherited)) {
+            return $tip . '.'; // the definition rule would reject this class: it does not narrow the ancestor's factories
+        }
+
+        return sprintf('%s, or add %s to the #[ForceFactory] attribute of %s.', $tip, $currentClass->getName(), $holder->getName());
     }
 
     /**
-     * @phpstan-param class-string $className
+     * Every class the expression may instantiate, as PHPStan infers it: a named class,
+     * the parent of an anonymous class, or the object/class-string type of a variable.
+     * Unknown classes are not part of the inferred type and so are silently skipped.
      *
-     * @return null|array<class-string>
+     * The constant strings of a class expression are read as well: one unknown name in a
+     * union turns the type of the whole `new` into an error type that would hide the product.
+     *
+     * @return list<ClassReflection>
      */
-    private function getFactoriesFromAttribute(string $className): ?array
+    private function instantiatedClasses(Node\Expr\New_ $node, Scope $scope): array
     {
-        if (\PHP_VERSION_ID < 80000 && $this->reflectionProvider->hasClass($className)) {
-            return null;
+        $classes = [];
+        foreach ($scope->getType($node)->getObjectClassReflections() as $reflection) {
+            if ($reflection->isAnonymous()) {
+                // an anonymous class is checked as its parent: the generated name tells the reader nothing
+                $reflection = $reflection->getParentClass();
+                if (null === $reflection) {
+                    continue;
+                }
+            }
+            $classes[$reflection->getName()] = $reflection;
         }
-
-        $reflection = $this->reflectionProvider->getClass($className);
-        /* psalm-suppress UndefinedClass */
-        $allowedFactories = [];
-        do {
-            /** @psalm-suppress UndefinedClass */
-            $allowedFactories = [...$allowedFactories, ...$this->getFactoriesFromAttributeByClass($reflection->getNativeReflection())];
-        } while ($reflection = $reflection->getParentClass());
-
-        if (empty($allowedFactories)) {
-            return null;
-        }
-        $allowedFactories = array_filter($allowedFactories);
-        sort($allowedFactories);
-
-        return $allowedFactories;
-    }
-
-    /**
-     * @psalm-suppress UndefinedDocblockClass,MismatchingDocblockParamType
-     *
-     * @psalm-param \PHPStan\BetterReflection\Reflection\Adapter\ReflectionClass|\PHPStan\BetterReflection\Reflection\Adapter\ReflectionEnum $reflection
-     *
-     * @return array<int, null|class-string>
-     */
-    private function getFactoriesFromAttributeByClass(\ReflectionClass $reflection): array
-    {
-        /** @psalm-suppress UndefinedClass */
-        foreach ($reflection->getAttributes() as $attribute) {
-            if (ForceFactory::class === $attribute->getName()) {
-                /** @var ForceFactory $forceFactory */
-                $forceFactory     = $attribute->newInstance();
-                $allowedFactories = $forceFactory->getAllowedFactories();
-
-                return empty($allowedFactories) ? [null] : $allowedFactories;
+        if ($node->class instanceof Node\Expr) {
+            foreach ($scope->getType($node->class)->getConstantStrings() as $constantString) {
+                $reflection = $this->resolver->classNamed($constantString->getValue());
+                if (null !== $reflection) {
+                    $classes[$reflection->getName()] = $reflection;
+                }
             }
         }
 
-        return [];
-    }
-
-    /**
-     * Determines possible classes for the new instance
-     *
-     * Modified from \PHPStan\Rules\Classes\InstantiationRule::getClassNames
-     *
-     * @param \PhpParser\Node\Expr\New_ $node $node
-     *
-     * @return array<int, array{string, bool}>
-     *
-     * @psalm-return  array<array{string, bool}>
-     *
-     * @license https://github.com/phpstan/phpstan-src/blob/1.11.x/LICENSE
-     * @author  Ondřej Mirtes et al. https://github.com/phpstan/phpstan-src/blame/1.11.x/src/Rules/Classes/InstantiationRule.php
-     * @author  ebln
-     *
-     * @see     \PHPStan\Rules\Classes\InstantiationRule::getClassNames
-     */
-    private function getClassNames(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
-    {
-        if ($node->class instanceof \PhpParser\Node\Name) {
-            return [[$scope->resolveName($node->class), \true]];
-        }
-        if ($node->class instanceof \PhpParser\Node\Stmt\Class_) {
-            $classNames = $scope->getType($node)->getObjectClassNames();
-            if ([] === $classNames) {
-                throw new \PHPStan\ShouldNotHappenException();
-            }
-            // Report back extended class!
-            if ($node->class->extends) {
-                return [[$node->class->extends->toString(), \true]];
-            }
-
-            return array_map(
-                static fn (string $className) => [$className, \false],
-                $classNames,
-            );
-        }
-        $type = $scope->getType($node->class);
-
-        return \array_merge(
-            \array_map(static function (\PHPStan\Type\Constant\ConstantStringType $type): array {
-                return [$type->getValue(), \true];
-            }, $type->getConstantStrings()),
-            \array_map(static function (string $name): array {
-                return [$name, \false];
-            }, $type->getObjectClassNames())
-        );
+        return array_values($classes);
     }
 }

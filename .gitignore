@@ -11,3 +11,5 @@
 /phpunit.xml
 /var/*
 /vendor/
+/.worktrees/
+/.tmp/

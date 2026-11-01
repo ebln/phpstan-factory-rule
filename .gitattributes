@@ -12,7 +12,6 @@
 /makefile            export-ignore
 /phpstan*.neon       export-ignore
 /phpunit.xml*        export-ignore
-/psalm-baseline.xml  export-ignore
-/psalm.xml           export-ignore
 /tests               export-ignore
+/.worktrees          export-ignore
 /vendor              export-ignore

@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Test\Ebln\PHPStan\EnforceFactory\Fixtures\Definition;
+
+use Ebln\Attrib\ForceFactory;
+
+#[ForceFactory(UnrelatedFactory::class, SubRealFactory::class)]
+class WideningChild extends MarkedParent
+{
+}
