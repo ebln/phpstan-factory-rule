@@ -1,0 +1,48 @@
+# Images for CI, pinned by digest. Dependabot (docker-compose ecosystem)
+# updates the digests; .github/dependabot.yml keeps each PHP image on its minor.
+#
+# Run a command in one image, for example:
+#   .github/ci/run php8.2 composer install
+#   .github/ci/run php8.5 vendor/bin/phpunit
+name: phpstan-factory-rule-ci
+
+x-php: &php
+  working_dir: /app
+  volumes:
+    - ../..:/app
+    - composer-bin:/opt/composer:ro
+  environment:
+    COMPOSER_HOME: /tmp/composer-home
+    COMPOSER_ROOT_VERSION: ${COMPOSER_ROOT_VERSION:-dev-main}
+    PATH: /opt/composer:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  depends_on:
+    composer:
+      condition: service_completed_successfully
+
+services:
+  # Copies the Composer phar into a volume that the PHP images mount.
+  # Composer then runs on the PHP version under test.
+  composer:
+    image: composer:2@sha256:4ed71c38c6d788eb4e4e3747b5332f5b40d5b5a6fcadd5062a1a70986a118e0a
+    entrypoint: ["cp", "/usr/bin/composer", "/opt/composer/composer"]
+    volumes:
+      - composer-bin:/opt/composer
+
+  php8.2:
+    <<: *php
+    image: php:8.2-cli-alpine@sha256:f18a17007c462eaa859be4a104c75c2240a84f390d2ff820ac19e7122dc48195
+
+  php8.3:
+    <<: *php
+    image: php:8.3-cli-alpine@sha256:86a7a8f46bbf73120a19cf72246f606b6de9aaa84a00971c25d187fbae44c211
+
+  php8.4:
+    <<: *php
+    image: php:8.4-cli-alpine@sha256:d8784155c4d37986be9ddd7a8950df7e78998cc48e35472cd69e2b9371424a65
+
+  php8.5:
+    <<: *php
+    image: php:8.5-cli-alpine@sha256:e899a75c775804e5466dbd9c96b31f8b6c6ae2ddb053a8466223a0c32992ff8e
+
+volumes:
+  composer-bin:

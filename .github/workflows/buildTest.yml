@@ -1,34 +1,106 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # Monthly, to catch new advisories and changes in the lowest dependency set.
+  schedule:
+    - cron: '23 5 1 * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    # GitHub runs this as "bash --noprofile --norc -eo pipefail {0}".
+    shell: bash
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }} (${{ matrix.deps }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3', '8.4', '8.5']
-        deps: [locked]
         include:
-          - php: '8.2'
-            deps: lowest
-    name: PHP ${{ matrix.php }} (${{ matrix.deps }})
+          # Checks that do not depend on the PHP version run once, in the "static" job.
+          - { php: '8.2', deps: locked, static: true }
+          - { php: '8.2', deps: lowest }
+          - { php: '8.3', deps: locked }
+          - { php: '8.4', deps: locked }
+          - { php: '8.5', deps: locked }
+    env:
+      PHP: php${{ matrix.php }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          php-version: ${{ matrix.php }}
-          tools: composer, php-cs-fixer
-          coverage: none
-      - run: composer validate --strict
-      - run: composer install --prefer-dist --no-progress
+          persist-credentials: false
+
+      - name: Pull images
+        run: docker compose --file .github/ci/compose.yml pull --quiet composer "$PHP"
+
+      - name: Validate composer.json
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer validate --strict
+
+      - name: Install locked dependencies
         if: matrix.deps == 'locked'
-      - run: composer update --prefer-lowest --prefer-dist --no-progress
+        run: .github/ci/run "$PHP" composer install --prefer-dist --no-progress
+
+      - name: Install lowest dependencies
         if: matrix.deps == 'lowest'
-      - run: vendor/bin/phpunit --no-coverage --colors=never
-      - run: vendor/bin/phpstan analyse --no-interaction --no-ansi
-      - run: vendor/bin/phpmd analyze attrib src --format text --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode
-      - run: vendor/bin/phpmd analyze tests --format text --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/Fixtures/*'
-      - run: php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
-        if: matrix.deps == 'locked'
+        run: .github/ci/run "$PHP" composer update --prefer-lowest --prefer-dist --no-progress
+
+      - name: PHPUnit
+        run: .github/ci/run "$PHP" vendor/bin/phpunit --no-coverage --colors=never
+
+      - name: PHPStan
+        run: .github/ci/run "$PHP" vendor/bin/phpstan analyse --no-interaction --no-ansi --no-progress
+
+      - name: Audit locked dependencies
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer audit --locked
+
+      - name: Mess detector (sources)
+        if: matrix.static
+        run: .github/ci/run "$PHP" vendor/bin/phpmd analyze attrib src --format text --ruleset codesize --ruleset controversial --ruleset naming --ruleset unusedcode
+
+      - name: Mess detector (tests)
+        if: matrix.static
+        run: .github/ci/run "$PHP" vendor/bin/phpmd analyze tests --format text --ruleset codesize --ruleset controversial --ruleset design --exclude '*tests/Fixtures/*'
+
+      - name: Install php-cs-fixer
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer install --working-dir=tools/php-cs-fixer --prefer-dist --no-progress
+
+      - name: Audit php-cs-fixer
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer audit --locked --working-dir=tools/php-cs-fixer
+
+      - name: Code style
+        if: matrix.static
+        run: .github/ci/run "$PHP" tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
+
+  # The only check a ruleset needs to require. GitHub counts a skipped required
+  # job as passed, so this job fails unless every test job reports "success".
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every test job to succeed
+        env:
+          RESULT: ${{ needs.test.result }}
+        run: |
+          echo "Result of the test jobs: $RESULT"
+          test "$RESULT" = success

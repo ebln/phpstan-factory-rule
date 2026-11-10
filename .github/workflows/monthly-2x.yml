@@ -1,0 +1,49 @@
+name: Monthly 2.x
+
+# GitHub starts scheduled workflows only from the default branch. This one
+# starts the Tests workflow of the 2.x branch and fails when that run fails,
+# so a failure is reported like any scheduled run of main.
+on:
+  schedule:
+    - cron: '23 5 1 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  tests-2x:
+    name: Tests on 2.x
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: write # start the Tests workflow on 2.x and read its result
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Start the Tests workflow on 2.x and wait for its result
+        shell: bash
+        run: |
+          latest() {
+            gh run list --workflow buildTest.yml --branch 2.x --event workflow_dispatch \
+              --limit 1 --json databaseId --jq '.[0].databaseId // 0'
+          }
+          # Run IDs increase, so the new run is the first one with a higher ID.
+          before=$(latest)
+          gh workflow run buildTest.yml --ref 2.x
+          id=0
+          for _ in $(seq 1 30); do
+            sleep 5
+            id=$(latest)
+            [ "$id" -gt "$before" ] && break
+          done
+          if [ "$id" -le "$before" ]; then
+            echo "The run on 2.x did not appear within 150 seconds." >&2
+            exit 1
+          fi
+          echo "Run on 2.x: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$id"
+          gh run watch "$id" --exit-status --interval 30
