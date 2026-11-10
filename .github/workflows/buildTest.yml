@@ -1,46 +1,115 @@
-name: PHPUnit Tests via Composer
+name: Tests
 
-on: [push]
+on:
+  push:
+    branches: ['2.x']
+  pull_request:
+  # Also started monthly by the scheduled run on the default branch.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    # GitHub runs this as "bash --noprofile --norc -eo pipefail {0}".
+    shell: bash
 
 jobs:
-  build:
-    runs-on: ${{ matrix.operating-system }}
+  test:
+    name: PHP ${{ matrix.php }} (${{ matrix.deps }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
-        operating-system: [ ubuntu-latest ]
-        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
-    name: Build and test on ${{ matrix.php }}
+        include:
+          # Checks that do not depend on the PHP version run once, in the "static" job.
+          # PHP 7.4 skips the attribute tests by design; from 8.0 on, a skipped test fails.
+          - { php: '7.4', deps: locked, static: true }
+          - { php: '7.4', deps: lowest }
+          - { php: '8.0', deps: locked, phpunit-flags: --fail-on-skipped }
+          - { php: '8.1', deps: locked, phpunit-flags: --fail-on-skipped }
+          - { php: '8.2', deps: locked, phpunit-flags: --fail-on-skipped }
+          - { php: '8.3', deps: locked, phpunit-flags: --fail-on-skipped }
+          # The locked vimeo/psalm 5.26.1 requires PHP <= 8.3, composer.json allows 8.4.
+          # "php+" ignores only upper PHP bounds; Psalm does not run on this job.
+          - { php: '8.4', deps: locked, phpunit-flags: --fail-on-skipped, install-flags: --ignore-platform-req=php+, skip-psalm: true }
+    env:
+      PHP: php${{ matrix.php }}
+      INSTALL_FLAGS: ${{ matrix.install-flags }}
+      PHPUNIT_FLAGS: ${{ matrix.phpunit-flags }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Force PHP ${{ matrix.php }}
-        uses: nanasess/setup-php@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          php-version: ${{ matrix.php }}
-      - name: Validate composer.json and composer.lock
-        run: composer validate
-      - name: Require php-cs-fixer
-        run: |
-          mkdir --parents ./tools/php-cs-fixer
-          composer require --working-dir=tools/php-cs-fixer friendsofphp/php-cs-fixer "friendsofphp/php-cs-fixer" --prefer-dist --no-progress
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Unit tests
-        run: |
-          mkdir --parents ./src ./tests
-          ./vendor/bin/phpunit --no-coverage --colors=never
+          persist-credentials: false
+
+      - name: Pull images
+        run: docker compose --file .github/ci/compose.yml pull --quiet composer "$PHP"
+
+      - name: Validate composer.json
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer validate --strict
+
+      - name: Install locked dependencies
+        if: matrix.deps == 'locked'
+        run: .github/ci/run "$PHP" composer install --prefer-dist --no-progress ${INSTALL_FLAGS:+"$INSTALL_FLAGS"}
+
+      - name: Install lowest dependencies
+        if: matrix.deps == 'lowest'
+        run: .github/ci/run "$PHP" composer update --prefer-lowest --prefer-dist --no-progress
+
+      - name: PHPUnit
+        run: .github/ci/run "$PHP" vendor/bin/phpunit --no-coverage --colors=never ${PHPUNIT_FLAGS:+"$PHPUNIT_FLAGS"}
+
       - name: Psalm
+        if: ${{ !matrix.skip-psalm }}
+        run: .github/ci/run "$PHP" vendor/bin/psalm --monochrome --no-progress --stats --show-info=false
+
+      - name: PHPStan
+        run: .github/ci/run "$PHP" vendor/bin/phpstan analyse --no-interaction --no-ansi --no-progress
+
+      - name: Audit locked dependencies
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer audit --locked
+
+      - name: Mess detector (sources)
+        if: matrix.static
+        run: .github/ci/run "$PHP" vendor/bin/phpmd attrib,src text codesize,controversial,naming,unusedcode
+
+      - name: Mess detector (tests)
+        if: matrix.static
+        run: .github/ci/run "$PHP" vendor/bin/phpmd tests text codesize,controversial,design
+
+      - name: Install php-cs-fixer
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer install --working-dir=tools/php-cs-fixer --prefer-dist --no-progress
+
+      - name: Audit php-cs-fixer
+        if: matrix.static
+        run: .github/ci/run "$PHP" composer audit --locked --working-dir=tools/php-cs-fixer
+
+      - name: Code style
+        if: matrix.static
+        run: .github/ci/run "$PHP" tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
+
+  # The only check a ruleset needs to require. GitHub counts a skipped required
+  # job as passed, so this job fails unless every test job reports "success".
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every test job to succeed
+        env:
+          RESULT: ${{ needs.test.result }}
         run: |
-          ./vendor/bin/psalm --monochrome --no-progress --stats --show-info=false
-      - name: phpstan
-        run: |
-          ./vendor/bin/phpstan --no-interaction --no-ansi analyse
-      - name: Mess Detector Sources
-        run: |
-          ./vendor/bin/phpmd src text codesize,controversial,naming,unusedcode
-      - name: Mess Detector Tests
-        run: |
-          ./vendor/bin/phpmd tests text codesize,controversial,design
-      - name: php-cs-fixer
-        run: |
-          ./tools/php-cs-fixer/vendor/bin/php-cs-fixer fix -v --config=.php-cs-fixer.dist.php --using-cache=no --dry-run
+          echo "Result of the test jobs: $RESULT"
+          test "$RESULT" = success

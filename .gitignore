@@ -11,3 +11,4 @@
 /phpunit.xml
 /var/*
 /vendor/
+/tools/*/vendor/
