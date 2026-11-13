@@ -19,6 +19,29 @@ final class InstantiationChecker
 
     public function checkNew(ClassReflection $product, Scope $scope): ?IdentifierRuleError
     {
+        return $this->check($product, $scope, 'ebln.forceFactory.outsideFactory', static fn (string $name, string $factories): string => sprintf('%s must be instantiated by %s.', $name, $factories));
+    }
+
+    /** @param string $method the canonical name of the ReflectionClass method that creates the instance */
+    public function checkReflection(ClassReflection $product, Scope $scope, string $method): ?IdentifierRuleError
+    {
+        return $this->check(
+            $product,
+            $scope,
+            'ebln.forceFactory.reflectionOutsideFactory',
+            static fn (string $name, string $factories): string => sprintf(
+                'ReflectionClass::%s() creates %s outside its factories: %s must be instantiated by %s.',
+                $method,
+                $name,
+                $name,
+                $factories,
+            ),
+        );
+    }
+
+    /** @param callable(string, string): string $message builds the outside-factory message from the product name and the factory list */
+    private function check(ClassReflection $product, Scope $scope, string $identifier, callable $message): ?IdentifierRuleError
+    {
         $allowedFactories = $this->resolver->allowedFactories($product);
         if (null === $allowedFactories) {
             return null; // no attribute in the chain
@@ -32,10 +55,8 @@ final class InstantiationChecker
             return null; // happy case: created within an allowed factory class
         }
 
-        return RuleErrorBuilder::message(
-            sprintf('%s must be instantiated by %s.', $product->getName(), implode(' or ', $allowedFactories))
-        )
-            ->identifier('ebln.forceFactory.outsideFactory')
+        return RuleErrorBuilder::message($message($product->getName(), implode(' or ', $allowedFactories)))
+            ->identifier($identifier)
             ->tip($this->tip($product, $allowedFactories, $currentClass))
             ->build()
         ;

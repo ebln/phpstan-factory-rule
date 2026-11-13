@@ -7,5 +7,11 @@ services:
         class: Ebln\PHPStan\EnforceFactory\ForceFactoryRule
         tags: [phpstan.rules.rule]
     -
+        class: Ebln\PHPStan\EnforceFactory\ForceFactoryReflectionRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Ebln\PHPStan\EnforceFactory\ForceFactoryReflectionCallableRule
+        tags: [phpstan.rules.rule]
+    -
         class: Ebln\PHPStan\EnforceFactory\ForceFactoryDefinitionRule
         tags: [phpstan.rules.rule]
