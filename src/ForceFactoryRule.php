@@ -7,16 +7,14 @@ namespace Ebln\PHPStan\EnforceFactory;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
-use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
-use PHPStan\Rules\RuleErrorBuilder;
 
 /**
  * @implements Rule<Node\Expr\New_>
  */
 class ForceFactoryRule implements Rule
 {
-    public function __construct(private readonly AllowedFactoriesResolver $resolver) {}
+    public function __construct(private readonly AllowedFactoriesResolver $resolver, private readonly InstantiationChecker $checker) {}
 
     public function getNodeType(): string
     {
@@ -27,65 +25,13 @@ class ForceFactoryRule implements Rule
     {
         $errors = [];
         foreach ($this->instantiatedClasses($node, $scope) as $class) {
-            $allowedFactories = $this->resolver->allowedFactories($class);
-            if (null === $allowedFactories) {
-                continue; // no attribute in the chain
+            $error = $this->checker->checkNew($class, $scope);
+            if (null !== $error) {
+                $errors[] = $error;
             }
-            if ([] === $allowedFactories) {
-                $errors[] = $this->noFactories($class); // fail closed: a list that resolves to nothing allows nobody
-
-                continue;
-            }
-
-            $currentClass = $scope->getClassReflection();
-            if (null !== $currentClass && in_array($currentClass->getName(), $allowedFactories, true)) {
-                continue; // happy case: created within an allowed factory class
-            }
-
-            $errors[] = RuleErrorBuilder::message(
-                sprintf('%s must be instantiated by %s.', $class->getName(), implode(' or ', $allowedFactories))
-            )
-                ->identifier('ebln.forceFactory.outsideFactory')
-                ->tip($this->tip($class, $allowedFactories, $currentClass))
-                ->build()
-            ;
         }
 
         return $errors;
-    }
-
-    private function noFactories(ClassReflection $product): IdentifierRuleError
-    {
-        $holder = $this->resolver->attributeHolder($product) ?? $product;
-
-        return RuleErrorBuilder::message(sprintf(
-            '%s cannot be instantiated: #[ForceFactory] on %s names no factory PHPStan can resolve.',
-            $product->getName(),
-            $holder->getName(),
-        ))
-            ->identifier('ebln.forceFactory.noFactories')
-            ->tip(sprintf('Fix the attribute on %s: list at least one existing class name constant.', $holder->getName()))
-            ->build()
-        ;
-    }
-
-    /** @param list<class-string> $allowedFactories */
-    private function tip(ClassReflection $product, array $allowedFactories, ?ClassReflection $currentClass): string
-    {
-        $tip = 'Move this instantiation into ' . implode(' or ', $allowedFactories);
-        if (null === $currentClass || $currentClass->isAnonymous()) {
-            return $tip . '.'; // nothing nameable to add to the attribute
-        }
-
-        // name the class that carries the attribute: an attribute added to a subclass would replace the inherited list
-        $holder    = $this->resolver->attributeHolder($product) ?? $product;
-        $ancestor  = $this->resolver->markedAncestor($holder);
-        $inherited = null === $ancestor ? [] : ($this->resolver->allowedFactories($ancestor) ?? []);
-        if ([] !== $inherited && !$this->resolver->isFactoryOrSubclass($currentClass, $inherited)) {
-            return $tip . '.'; // the definition rule would reject this class: it does not narrow the ancestor's factories
-        }
-
-        return sprintf('%s, or add %s to the #[ForceFactory] attribute of %s.', $tip, $currentClass->getName(), $holder->getName());
     }
 
     /**

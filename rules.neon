@@ -2,6 +2,8 @@ services:
     -
         class: Ebln\PHPStan\EnforceFactory\AllowedFactoriesResolver
     -
+        class: Ebln\PHPStan\EnforceFactory\InstantiationChecker
+    -
         class: Ebln\PHPStan\EnforceFactory\ForceFactoryRule
         tags: [phpstan.rules.rule]
     -
