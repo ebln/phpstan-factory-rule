@@ -5,6 +5,17 @@ Intended to follow [«Keep a Changelog»](https://keepachangelog.com/en/)
 
 ----
 
+## [3.1.0]
+
+### Added
+- `ForceFactoryReflectionRule`, reporting a marked class that is created through `ReflectionClass` outside its factories, with the identifier `ebln.forceFactory.reflectionOutsideFactory`. It checks `newInstance()`, `newInstanceArgs()`, `newInstanceWithoutConstructor()`, `newLazyGhost()` and `newLazyProxy()`. Method names are matched without regard to case, and nullsafe calls are checked
+- `ForceFactoryReflectionCallableRule`, reporting a first-class callable such as `$reflection->newInstance(...)` where the Closure is created. The later call of the Closure is not checked
+
+### Changed
+- `ForceFactoryRule` takes the new `InstantiationChecker` as a second constructor argument, and `rules.neon` wires it. This matters for a configuration that registers `ForceFactoryRule` without `rules.neon`, and for code that constructs the rule by hand. Include `rules.neon` instead
+
+----
+
 ## [3.0.0]
 
 ### Added
