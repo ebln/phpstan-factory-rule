@@ -23,6 +23,8 @@ final class ForceFactoryReflectionRule implements Rule
         'newinstance'                   => 'newInstance',
         'newinstanceargs'               => 'newInstanceArgs',
         'newinstancewithoutconstructor' => 'newInstanceWithoutConstructor',
+        'newlazyghost'                  => 'newLazyGhost',
+        'newlazyproxy'                  => 'newLazyProxy',
     ];
 
     public function __construct(private readonly InstantiationChecker $checker) {}
@@ -55,7 +57,8 @@ final class ForceFactoryReflectionRule implements Rule
 
     /**
      * The classes named by the template type T of the caller. The return type of the call is not used:
-     * it is an error type when the caller is nullable. Plain ReflectionClass, ReflectionClass<object>
+     * for newLazyGhost() and newLazyProxy() it is an error type when the analysed PHP version is below 8.4,
+     * while the caller keeps its type ReflectionClass<T>. Plain ReflectionClass, ReflectionClass<object>
      * and callers of another type give no class reflection and are skipped.
      *
      * @return list<ClassReflection>

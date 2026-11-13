@@ -39,4 +39,14 @@ class ReflectionFactory
 
         return $reflection->newInstance(...);
     }
+
+    public function viaNewLazyGhost(): object
+    {
+        return (new \ReflectionClass(ReflectedProduct::class))->newLazyGhost(static function (object $ghost): void {});
+    }
+
+    public function viaNewLazyProxy(): object
+    {
+        return (new \ReflectionClass(ReflectedProduct::class))->newLazyProxy(static fn (): object => new \stdClass());
+    }
 }
