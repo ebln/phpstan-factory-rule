@@ -5,6 +5,9 @@
       <directory>./tests</directory>
     </testsuite>
   </testsuites>
+  <php>
+    <ini name="memory_limit" value="256M"/>
+  </php>
   <source>
     <include>
       <directory>./attrib</directory>

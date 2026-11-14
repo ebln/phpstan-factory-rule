@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Test\Ebln\PHPStan\EnforceFactory;
 
 use Ebln\PHPStan\EnforceFactory\ForceFactoryRule;
+use Ebln\PHPStan\EnforceFactory\InstantiationChecker;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * @extends RuleTestCase<ForceFactoryRule>
  */
 #[CoversClass(ForceFactoryRule::class)]
+#[CoversClass(InstantiationChecker::class)]
 final class ForceFactoryRuleTest extends RuleTestCase
 {
     private const NS = 'Test\Ebln\PHPStan\EnforceFactory\Fixtures\Instantiation\\';
